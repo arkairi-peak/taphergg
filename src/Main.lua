@@ -82,7 +82,7 @@
 ]]
 
 -- ── Module paths (update BASE_URL before hosting) ───────────────────────────
-local BASE_URL = "YOUR_RAW_URL_HERE"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
+local BASE_URL = "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
 
 local function req(path)
     -- Try loadstring from URL first, fall back to require for local dev
