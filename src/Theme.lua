@@ -13,7 +13,7 @@ Theme.Default = {
     SurfaceLight      = Color3.fromRGB(20,  28,  60),    -- element bg
     SurfaceLighter    = Color3.fromRGB(28,  38,  80),    -- hover / active
     GlassTransparency = 0.35,                             -- main glass opacity
-    BlurSize          = 24,                               -- BlurEffect size
+    BlurSize          = 0,                               -- BlurEffect size
 
     -- Borders
     Border            = Color3.fromRGB(60,  80,  140),
