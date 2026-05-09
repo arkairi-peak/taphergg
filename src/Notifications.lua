@@ -31,13 +31,17 @@ local function getContainer()
     screenGui.Name = "TapherLib_Notifs"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.DisplayOrder = 999
+    screenGui.DisplayOrder = 9999
+    screenGui.IgnoreGuiInset = true
 
     local ok = pcall(function()
         screenGui.Parent = game:GetService("CoreGui")
     end)
     if not ok then
-        screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+        local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 10)
+        if playerGui then
+            screenGui.Parent = playerGui
+        end
     end
 
     container = Utility.Create("Frame", {
