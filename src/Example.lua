@@ -174,7 +174,7 @@ About:AddButton({
 })
 
 -- ── Startup notification ──────────────────────────────────────────────────────
-task.wait(0.5)
+task.wait(2)
 Tapher:Notify({
     Title       = "Tapher Hub",
     Description = "Loaded successfully! Press RightShift to toggle.",
