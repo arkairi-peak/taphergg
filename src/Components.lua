@@ -134,7 +134,7 @@ function Components.CreateWindow(opts)
         Utility.Create("TextLabel", {
             Name = "Subtitle",
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 50, 0, 30),
+            Position = UDim2.new(0, 50, 0, 18),
             Size = UDim2.new(0.5, 0, 0, 14),
             Text = opts.Subtitle,
             TextColor3 = T.TextMuted,
@@ -339,6 +339,29 @@ function Components.CreateWindow(opts)
     local activeTab = nil
 
     local Window = {}
+
+    -- Defined FIRST so AddTab can call it safely on the first tab
+    function Window:SetActiveTab(tab)
+        if activeTab then
+            activeTab.content.Visible = false
+            Utility.Tween(activeTab.btn, fast, {
+                BackgroundColor3 = Theme.Current.TabInactive,
+                BackgroundTransparency = 0.4,
+            })
+            activeTab.indicator.Visible = false
+            activeTab.btn:FindFirstChild("Label").TextColor3 = Theme.Current.TextSecondary
+            activeTab.btn:FindFirstChild("Icon").TextColor3  = Theme.Current.TextMuted
+        end
+        activeTab = tab
+        tab.content.Visible = true
+        Utility.Tween(tab.btn, fast, {
+            BackgroundColor3 = Theme.Current.Accent,
+            BackgroundTransparency = 0.25,
+        })
+        tab.indicator.Visible = true
+        tab.btn:FindFirstChild("Label").TextColor3 = Theme.Current.TextPrimary
+        tab.btn:FindFirstChild("Icon").TextColor3  = Color3.new(1,1,1)
+    end
 
     function Window:AddTab(tabOpts)
         tabOpts = tabOpts or {}
@@ -893,11 +916,21 @@ function Components.CreateWindow(opts)
 
             openBtn.MouseButton1Click:Connect(function()
                 open = not open
-                listFrame.Visible = true
-                local targetH = open and (listFrame._targetH or 120) or 0
-                Utility.Tween(listFrame, fast, { Size = UDim2.new(1, 0, 0, targetH) }, function()
-                    if not open then listFrame.Visible = false end
-                end)
+                if open then
+                    -- Position list just below the frame in absolute screen space
+                    local absPos  = frame.AbsolutePosition
+                    local absSize = frame.AbsoluteSize
+                    local caPos   = contentArea.AbsolutePosition
+                    listFrame.Position = UDim2.new(0, absPos.X - caPos.X, 0, absPos.Y - caPos.Y + absSize.Y + 4)
+                    listFrame.Size = UDim2.new(0, absSize.X, 0, 0)
+                    listFrame.Visible = true
+                    local targetH = listFrame._targetH or 120
+                    Utility.Tween(listFrame, fast, { Size = UDim2.new(0, absSize.X, 0, targetH) })
+                else
+                    Utility.Tween(listFrame, fast, { Size = UDim2.new(0, listFrame.AbsoluteSize.X, 0, 0) }, function()
+                        listFrame.Visible = false
+                    end)
+                end
                 Utility.Tween(arrow, fast, { Rotation = open and 180 or 0 })
             end)
 
@@ -1228,28 +1261,6 @@ function Components.CreateWindow(opts)
         end
 
         return Tab
-    end
-
-    function Window:SetActiveTab(tab)
-        if activeTab then
-            activeTab.content.Visible = false
-            Utility.Tween(activeTab.btn, fast, {
-                BackgroundColor3 = Theme.Current.TabInactive,
-                BackgroundTransparency = 0.4,
-            })
-            activeTab.indicator.Visible = false
-            activeTab.btn:FindFirstChild("Label").TextColor3 = Theme.Current.TextSecondary
-            activeTab.btn:FindFirstChild("Icon").TextColor3  = Theme.Current.TextMuted
-        end
-        activeTab = tab
-        tab.content.Visible = true
-        Utility.Tween(tab.btn, fast, {
-            BackgroundColor3 = Theme.Current.Accent,
-            BackgroundTransparency = 0.25,
-        })
-        tab.indicator.Visible = true
-        tab.btn:FindFirstChild("Label").TextColor3 = Theme.Current.TextPrimary
-        tab.btn:FindFirstChild("Icon").TextColor3  = Color3.new(1,1,1)
     end
 
     function Window:Destroy()
