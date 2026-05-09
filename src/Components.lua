@@ -134,7 +134,7 @@ function Components.CreateWindow(opts)
         Utility.Create("TextLabel", {
             Name = "Subtitle",
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 50, 0, 30),
+            Position = UDim2.new(0, 50, 0, 18),
             Size = UDim2.new(0.5, 0, 0, 14),
             Text = opts.Subtitle,
             TextColor3 = T.TextMuted,
@@ -828,22 +828,22 @@ function Components.CreateWindow(opts)
                 Parent = frame,
             })
 
-            -- Dropdown list
+            -- Dropdown list — parented to contentArea so ScrollingFrame doesn't clip it
             local listFrame = Utility.Create("ScrollingFrame", {
                 BackgroundColor3 = T3.Surface,
-                BackgroundTransparency = 0.1,
+                BackgroundTransparency = 0.05,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0, 0, 1, 4),
-                Size = UDim2.new(1, 0, 0, 0),
+                Position = UDim2.new(0, 0, 0, 0), -- repositioned dynamically on open
+                Size = UDim2.new(0, 0, 0, 0),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 ScrollBarThickness = 2,
                 ScrollBarImageColor3 = T3.Accent,
                 Visible = false,
-                ZIndex = frame.ZIndex + 10,
-                Parent = frame,
+                ZIndex = 9000,
+                Parent = contentArea,
             })
             Utility.Round(listFrame, 8)
-            Utility.Stroke(listFrame, T3.Border, 1, 0.5)
+            Utility.Stroke(listFrame, T3.Border, 1, 0.4)
             local listLayout = Utility.ListLayout(listFrame, Enum.FillDirection.Vertical, 2)
             Utility.Padding(listFrame, 4, 4, 4, 4)
 
