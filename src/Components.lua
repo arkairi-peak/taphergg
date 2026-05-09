@@ -134,7 +134,7 @@ function Components.CreateWindow(opts)
         Utility.Create("TextLabel", {
             Name = "Subtitle",
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 50, 0, 18),
+            Position = UDim2.new(0, 50, 0, 25),
             Size = UDim2.new(0.5, 0, 0, 14),
             Text = opts.Subtitle,
             TextColor3 = T.TextMuted,
