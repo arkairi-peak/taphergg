@@ -239,8 +239,10 @@ local animators = {}
 
 -- SLIDE: swoops in from the right
 animators.Slide = function(card, title, desc, progFill, opts)
-    card.Position = UDim2.new(1.2, 0, 0, 0)
     card.AnchorPoint = Vector2.new(0, 0)
+    card.Position = UDim2.new(1.5, 0, 0, 0)
+    card.BackgroundTransparency = Theme.Current.GlassTransparency
+    task.wait()
     Utility.Tween(card,
         TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
         { Position = UDim2.new(0, 0, 0, 0) }
