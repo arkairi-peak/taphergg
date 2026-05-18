@@ -13,7 +13,7 @@ Theme.Default = {
     SurfaceLight      = Color3.fromRGB(20,  28,  60),    -- element bg
     SurfaceLighter    = Color3.fromRGB(28,  38,  80),    -- hover / active
     GlassTransparency = 0.35,                             -- main glass opacity
-    BlurSize          = 0,                               -- BlurEffect size
+    BlurSize          = 24,                               -- BlurEffect size
 
     -- Borders
     Border            = Color3.fromRGB(60,  80,  140),
@@ -69,12 +69,12 @@ Theme.Presets = {
 -- ── API ──────────────────────────────────────────────────────────────────────
 
 -- Set accent by preset name OR custom Color3
+-- Also shifts background/surface to a dark tinted version of the accent hue
 function Theme.SetAccent(accentOrPreset)
     local preset
     if type(accentOrPreset) == "string" then
         preset = Theme.Presets[accentOrPreset]
     elseif typeof(accentOrPreset) == "Color3" then
-        -- Derive hover/dim from custom color
         local h, s, v = Color3.toHSV(accentOrPreset)
         preset = {
             Accent      = accentOrPreset,
@@ -87,6 +87,20 @@ function Theme.SetAccent(accentOrPreset)
         for k, v in pairs(preset) do
             Theme.Current[k] = v
         end
+        -- Derive dark background tints from accent hue
+        local acc = Theme.Current.Accent
+        local h, s, _ = Color3.toHSV(acc)
+        -- Keep saturation low and value very dark for backgrounds
+        Theme.Current.Background     = Color3.fromHSV(h, math.min(s, 0.55), 0.07)
+        Theme.Current.Surface        = Color3.fromHSV(h, math.min(s, 0.50), 0.10)
+        Theme.Current.SurfaceLight   = Color3.fromHSV(h, math.min(s, 0.45), 0.14)
+        Theme.Current.SurfaceLighter = Color3.fromHSV(h, math.min(s, 0.40), 0.18)
+        Theme.Current.Border         = Color3.fromHSV(h, math.min(s, 0.50), 0.28)
+        Theme.Current.BorderLight    = Color3.fromHSV(h, math.min(s, 0.45), 0.38)
+        Theme.Current.SliderTrack    = Color3.fromHSV(h, math.min(s, 0.45), 0.12)
+        Theme.Current.TabInactive    = Color3.fromHSV(h, math.min(s, 0.45), 0.10)
+        Theme.Current.InputBg        = Color3.fromHSV(h, math.min(s, 0.50), 0.07)
+        Theme.Current.ToggleOff      = Color3.fromHSV(h, math.min(s, 0.35), 0.15)
     end
 end
 
