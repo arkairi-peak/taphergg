@@ -3,16 +3,27 @@
     Replace BASE_URL in Main.lua with your raw GitHub/Pastebin URL first.
 ]]
 
-local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/refs/heads/main/src/Main.lua'))()
+local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/refs/heads/main/src/Main.luaa'))()
 
 -- ── Create window ────────────────────────────────────────────────────────────
+--[[
+    MinimiseMode options:
+      "Bar"   — shrinks UI to just the title bar (default)
+      "Float" — hides the UI completely and shows a small floating square button
+                you can click to bring the UI back. Set FloatImage to a PNG URL
+                from your GitHub (raw URL) or any rbxassetid for a custom logo.
+]]
 local Window = Tapher:CreateWindow({
-    Title     = "Tapher Hub",
-    Subtitle  = "v1.0 • by you",
-    Icon      = "🎧",
-    Keybind   = Enum.KeyCode.RightShift,
-    Watermark = true,
-    SearchBar = true,
+    Title         = "Tapher Hub",
+    Subtitle      = "v1.0 • by you",
+    Icon          = "◈",                   -- text icon shown in title bar logo box
+    Keybind       = Enum.KeyCode.RightShift,
+    Watermark     = true,
+    SearchBar     = true,
+    MinimiseMode  = "Float",               -- "Bar" or "Float"
+    FloatImage    = nil,                   -- set to a raw PNG URL or rbxassetid://XXXXX
+                                           -- e.g. "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src/logo.png"
+                                           -- if nil, falls back to Icon text
 })
 
 -- ── Tab: Combat ──────────────────────────────────────────────────────────────
