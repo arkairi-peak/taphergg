@@ -107,6 +107,14 @@ end
 
 function Config.SaveAll(profileName)
     local snapshot = {}
+    -- Save accent color
+    local acc = require and require("Theme") or nil -- handled by TapherLib
+    snapshot["__accent__"] = {
+        R = Config._accentColor and Config._accentColor.R or nil,
+        G = Config._accentColor and Config._accentColor.G or nil,
+        B = Config._accentColor and Config._accentColor.B or nil,
+        preset = Config._accentPreset or nil,
+    }
     for key, entry in pairs(Config._registry) do
         local ok, val = pcall(entry.get)
         if ok then snapshot[key] = val end
@@ -117,6 +125,15 @@ end
 function Config.LoadAll(profileName)
     local data = Config.Load(profileName or "default")
     if not data then return false end
+    -- Restore accent
+    if data["__accent__"] then
+        local a = data["__accent__"]
+        if a.preset and Config._onAccentLoad then
+            Config._onAccentLoad(a.preset)
+        elseif a.R and Config._onAccentLoad then
+            Config._onAccentLoad(Color3.new(a.R, a.G, a.B))
+        end
+    end
     for key, entry in pairs(Config._registry) do
         if data[key] ~= nil then
             pcall(entry.set, data[key])
