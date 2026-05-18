@@ -353,7 +353,7 @@ function Components.CreateWindow(opts)
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 48, 0, 48),
+        Size = UDim2.new(0, 68, 0, 68),
         Text = "",
         Visible = false,
         ZIndex = 500,
