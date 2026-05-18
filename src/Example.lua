@@ -14,13 +14,13 @@ local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkair
                 from your GitHub (raw URL) or any rbxassetid for a custom logo.
 ]]
 local Window = Tapher:CreateWindow({
-    Title         = "Tapher Huh",
+    Title         = "Tapher Hub",
     Subtitle      = "v1.0 • by you",
     Icon          = "🖥️",                   -- text icon shown in title bar logo box
     Keybind       = Enum.KeyCode.RightShift,
     Watermark     = true,
     SearchBar     = true,
-    MinimiseMode  = "Bar",               -- "Bar" or "Float"
+    MinimiseMode  = "Float",               -- "Bar" or "Float"
     FloatImage    = nil,                   -- set to a raw PNG URL or rbxassetid://XXXXX
                                            -- e.g. "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src/logo.png"
                                            -- if nil, falls back to Icon text
