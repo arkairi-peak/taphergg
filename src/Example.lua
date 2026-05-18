@@ -16,12 +16,12 @@ local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkair
 local Window = Tapher:CreateWindow({
     Title         = "Tapher Hub",
     Subtitle      = "v1.0 • by you",
-    Icon          = "https://i.ibb.co/zWmfQn8q/TP-LOGO-TAPHER.png",                   -- text icon shown in title bar logo box
+    Icon          = "🖥️",                   -- text icon shown in title bar logo box
     Keybind       = Enum.KeyCode.RightShift,
     Watermark     = true,
     SearchBar     = true,
     MinimiseMode  = "Float",               -- "Bar" or "Float"
-    FloatImage    = "https://i.ibb.co/zWmfQn8q/TP-LOGO-TAPHER.png",                   -- set to a raw PNG URL or rbxassetid://XXXXX
+    FloatImage    = "rbxassetid://96079999593461",                   -- set to a raw PNG URL or rbxassetid://XXXXX
                                            -- e.g. "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src/logo.png"
                                            -- if nil, falls back to Icon text
 })
