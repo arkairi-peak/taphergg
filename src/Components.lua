@@ -65,20 +65,20 @@ function Components.CreateWindow(opts)
     Utility.Stroke(root, T.Border, 1, T.BorderTransp)
     Utility.Shadow(root, 22, 0.45)
 
-    -- Glass shimmer gradient
+    -- Glass shimmer — very subtle top-edge highlight only
     local shimmer = Utility.Create("Frame", {
-        BackgroundTransparency = 0.85,
-        BackgroundColor3 = Color3.new(1,1,1),
+        BackgroundTransparency = 0.92,
+        BackgroundColor3 = Color3.new(1, 1, 1),
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0.38, 0),
+        Size = UDim2.new(1, 0, 0.18, 0),
         ZIndex = root.ZIndex,
         Parent = root,
     })
     Utility.Round(shimmer, 14)
     Utility.Gradient(shimmer, {
-        ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(100,120,200)),
-    }, 140)
+        ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+        ColorSequenceKeypoint.new(1, Color3.new(0.4, 0.4, 0.6)),
+    }, 180)
 
     -- Title bar
     local titleBar = Utility.Create("Frame", {
@@ -158,7 +158,7 @@ function Components.CreateWindow(opts)
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -12, 0.5, 0),
         Size = UDim2.new(0, 20, 0, 20),
-        Text = "✖",
+        Text = "✕",
         TextColor3 = Color3.new(1,1,1),
         TextSize = 9,
         Font = Enum.Font.GothamBold,
@@ -214,18 +214,32 @@ function Components.CreateWindow(opts)
         })
     end
 
-    -- Tab bar (left sidebar style)
+    -- Sidebar — darker tinted panel, rounded bottom-left to match window
     local sidebar = Utility.Create("Frame", {
         Name = "Sidebar",
         BackgroundColor3 = T.Background,
-        BackgroundTransparency = 0.3,
+        BackgroundTransparency = 0.15,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 48),
         Size = UDim2.new(0, isMobile and 80 or 110, 1, -48),
         ZIndex = root.ZIndex + 1,
         Parent = root,
     })
-    Utility.Round(sidebar, 0)
+    -- Bottom-left rounded corner only (fake it by placing a corner frame)
+    local sidebarCorner = Instance.new("UICorner")
+    sidebarCorner.CornerRadius = UDim.new(0, 14)
+    sidebarCorner.Parent = sidebar
+    -- Right edge straight divider line
+    Utility.Create("Frame", {
+        BackgroundColor3 = T.Border,
+        BackgroundTransparency = 0.55,
+        BorderSizePixel = 0,
+        AnchorPoint = Vector2.new(1, 0),
+        Position = UDim2.new(1, 0, 0, 0),
+        Size = UDim2.new(0, 1, 1, 0),
+        ZIndex = root.ZIndex + 2,
+        Parent = sidebar,
+    })
 
     local tabList = Utility.Create("ScrollingFrame", {
         Name = "TabList",
@@ -609,6 +623,7 @@ function Components.CreateWindow(opts)
 
             -- Track
             local track = Utility.Create("Frame", {
+                Name = "ToggleTrack",
                 BackgroundColor3 = state and T3.Accent or T3.ToggleOff,
                 BorderSizePixel = 0,
                 AnchorPoint = Vector2.new(1, 0.5),
@@ -720,6 +735,7 @@ function Components.CreateWindow(opts)
             Utility.Round(track, 99)
 
             local fill = Utility.Create("Frame", {
+                Name = "SliderFill",
                 BackgroundColor3 = T3.Accent,
                 BorderSizePixel = 0,
                 Size = UDim2.new((val - min) / (max - min), 0, 1, 0),
@@ -729,6 +745,7 @@ function Components.CreateWindow(opts)
             Utility.Round(fill, 99)
 
             local thumb = Utility.Create("Frame", {
+                Name = "SliderThumb",
                 BackgroundColor3 = Color3.new(1,1,1),
                 BorderSizePixel = 0,
                 AnchorPoint = Vector2.new(0.5, 0.5),
@@ -1279,30 +1296,65 @@ function Components.CreateWindow(opts)
         activeBtns = {},
     }
 
-    -- Live accent recolor — call this after Tapher:SetAccent()
+    -- Live accent recolor — updates every accent element in the whole window
     function Window:RefreshAccent()
         local T2 = Theme.Current
-        -- Logo box
-        logoBox.BackgroundColor3 = T2.Accent
-        -- Active tab button
-        if activeTab then
-            Utility.Tween(activeTab.btn, fast, { BackgroundColor3 = T2.Accent })
-            activeTab.indicator.BackgroundColor3 = T2.Accent
-        end
-        -- All tab scroll bar
+
+        -- Title logo box
+        Utility.Tween(logoBox, fast, { BackgroundColor3 = T2.Accent })
+
+        -- Root border stroke
+        local rootStroke = root:FindFirstChildWhichIsA("UIStroke")
+        if rootStroke then rootStroke.Color = T2.Border end
+
+        -- Sidebar accent tint gradient
+        Utility.Tween(sidebar, fast, { BackgroundColor3 = T2.Background })
+
+        -- All tabs
         for _, tab in ipairs(tabs) do
+            -- Scroll bar color
             tab.content.ScrollBarImageColor3 = T2.Accent
-            tab.indicator.BackgroundColor3 = T2.Accent
-            -- Recolor all strokes/fills inside content
-            for _, comp in ipairs(tab.components) do
-                if comp.accentRef then
-                    for _, ref in ipairs(comp.accentRef) do
-                        if ref.instance and ref.instance.Parent then
-                            ref.instance[ref.prop] = T2[ref.key] or T2.Accent
+
+            -- Indicator bar
+            Utility.Tween(tab.indicator, fast, { BackgroundColor3 = T2.Accent })
+
+            -- Active tab button color
+            if tab == activeTab then
+                Utility.Tween(tab.btn, fast, { BackgroundColor3 = T2.Accent })
+            end
+
+            -- Walk every UI element inside this tab's content and recolor accent pieces
+            local function recolorDescendants(parent)
+                for _, child in ipairs(parent:GetChildren()) do
+                    local n = child.Name
+                    -- Toggle tracks ON state
+                    if n == "ToggleTrack" and child:IsA("Frame") then
+                        local isOn = child.BackgroundColor3 ~= T2.ToggleOff
+                            and child.BackgroundColor3 ~= Color3.fromRGB(30, 35, 70)
+                        if isOn then
+                            Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
                         end
                     end
+                    -- Slider fills
+                    if n == "SliderFill" and child:IsA("Frame") then
+                        Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
+                    end
+                    -- Slider thumb stroke
+                    if n == "SliderThumb" and child:IsA("Frame") then
+                        local st = child:FindFirstChildWhichIsA("UIStroke")
+                        if st then st.Color = T2.Accent end
+                    end
+                    -- Recurse
+                    recolorDescendants(child)
                 end
             end
+            recolorDescendants(tab.content)
+        end
+
+        -- Search bar stroke
+        if searchBar then
+            local sb_stroke = searchBar:FindFirstChildWhichIsA("UIStroke")
+            if sb_stroke then sb_stroke.Color = T2.Border end
         end
     end
 
