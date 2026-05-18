@@ -85,13 +85,22 @@
 local BASE_URL = "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
 
 local function req(path)
-    -- Try loadstring from URL first, fall back to require for local dev
+    local url = BASE_URL .. "/" .. path
     local ok, result = pcall(function()
-        return loadstring(game:HttpGet(BASE_URL .. "/" .. path))()
+        local src = game:HttpGet(url)
+        if not src or src == "" then
+            error("Empty response from: " .. url)
+        end
+        local fn, err = loadstring(src)
+        if not fn then
+            error("loadstring failed for " .. path .. ": " .. tostring(err))
+        end
+        return fn()
     end)
-    if ok then return result end
-    -- Local fallback (for Studio testing with file system)
-    return require(script.Parent[path:gsub("%.lua$", "")])
+    if ok then
+        return result
+    end
+    error("[TapherLib] Failed to load " .. path .. "\nURL: " .. url .. "\nError: " .. tostring(result))
 end
 
 -- ── Load modules ────────────────────────────────────────────────────────────
@@ -147,11 +156,22 @@ end
 -- Change accent color at runtime — updates Theme AND recolors all open windows
 function TapherLib:SetAccent(accentOrPreset)
     Theme.SetAccent(accentOrPreset)
-    for _, win in ipairs(openWindows) do
-        if win.RefreshAccent then
-            win:RefreshAccent()
-        end
+    -- Track for config save
+    if type(accentOrPreset) == "string" then
+        Config._accentPreset = accentOrPreset
+        Config._accentColor  = nil
+    else
+        Config._accentColor  = accentOrPreset
+        Config._accentPreset = nil
     end
+    for _, win in ipairs(openWindows) do
+        if win.RefreshAccent then win:RefreshAccent() end
+    end
+end
+
+-- Wire up accent restore on config load
+Config._onAccentLoad = function(accentOrPreset)
+    TapherLib:SetAccent(accentOrPreset)
 end
 
 -- Override any individual theme value
