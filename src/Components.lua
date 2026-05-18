@@ -158,7 +158,7 @@ function Components.CreateWindow(opts)
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -12, 0.5, 0),
         Size = UDim2.new(0, 20, 0, 20),
-        Text = "✕",
+        Text = "✖",
         TextColor3 = Color3.new(1,1,1),
         TextSize = 9,
         Font = Enum.Font.GothamBold,
