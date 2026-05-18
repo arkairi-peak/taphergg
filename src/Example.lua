@@ -3,7 +3,7 @@
     Replace BASE_URL in Main.lua with your raw GitHub/Pastebin URL first.
 ]]
 
-local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/refs/heads/main/src/Main.luaa'))()
+local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/refs/heads/main/src/Main.lua'))()
 
 -- ── Create window ────────────────────────────────────────────────────────────
 --[[
