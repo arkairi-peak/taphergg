@@ -14,7 +14,7 @@ local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkair
                 from your GitHub (raw URL) or any rbxassetid for a custom logo.
 ]]
 local Window = Tapher:CreateWindow({
-    Title         = "Tapher Hub",
+    Title         = "Tapher Huh",
     Subtitle      = "v1.0 • by you",
     Icon          = "🖥️",                   -- text icon shown in title bar logo box
     Keybind       = Enum.KeyCode.RightShift,
