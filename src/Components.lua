@@ -369,13 +369,27 @@ function Components.CreateWindow(opts)
         floatIcon = Utility.Create("ImageLabel", {
             Name = "FloatIcon",
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, -8, 1, -8),
-            Position = UDim2.new(0, 4, 0, 4),
+            Size = UDim2.new(1, -6, 1, -6),
+            Position = UDim2.new(0, 3, 0, 3),
             Image = opts.FloatImage,
+            ImageColor3 = Color3.new(1, 1, 1),
+            ScaleType = Enum.ScaleType.Fit,
             ZIndex = floatBtn.ZIndex + 1,
             Parent = floatBtn,
         })
-        Utility.Round(floatIcon, 10)
+        Utility.Round(floatIcon, 12)
+
+        -- If direct assetid doesn't load, try fetching the decal's Texture property
+        task.spawn(function()
+            task.wait(2)
+            if floatIcon and floatIcon.Parent and floatIcon.IsLoaded ~= nil and not floatIcon.IsLoaded then
+                -- Try prefixing with rbxthumb for thumbnails
+                local id = opts.FloatImage:match("%d+")
+                if id then
+                    floatIcon.Image = "rbxthumb://type=Asset&id=" .. id .. "&w=150&h=150"
+                end
+            end
+        end)
     else
         floatIcon = Utility.Create("TextLabel", {
             Name = "FloatIcon",
@@ -402,25 +416,42 @@ function Components.CreateWindow(opts)
         minimised = state
         if minimised then
             if minimiseMode == "Float" then
-                -- Shrink window to nothing, float button stays visible
-                Utility.Tween(root, med, { Size = UDim2.new(0, winW, 0, 0), BackgroundTransparency = 1 }, function()
-                    root.Visible = false
+                -- Fade + shrink sidebar and content first, then window
+                if searchBar then
+                    Utility.Tween(searchBar, fast, { BackgroundTransparency = 1 })
+                end
+                Utility.Tween(sidebar, fast, { BackgroundTransparency = 1 })
+                Utility.Tween(contentArea, fast, { BackgroundTransparency = 1 })
+                -- Smooth scale down
+                Utility.Tween(root, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, winW * 0.85, 0, winH * 0.85),
+                    BackgroundTransparency = 0.6,
+                }, function()
+                    Utility.Tween(root, fast, { Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1 }, function()
+                        root.Visible = false
+                    end)
                 end)
             else
-                -- Bar mode: shrink to title bar only, hide search
                 if searchBar then searchBar.Visible = false end
-                Utility.Tween(root, med, { Size = miniSize })
+                Utility.Tween(root, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Size = miniSize })
             end
         else
             if minimiseMode == "Float" then
-                -- Expand window back, float button stays visible
                 root.Visible = true
-                root.Size = UDim2.new(0, winW, 0, 0)
-                root.BackgroundTransparency = 1
-                Utility.Tween(root, slow, { Size = fullSize, BackgroundTransparency = T.GlassTransparency })
+                root.Size = UDim2.new(0, winW * 0.8, 0, winH * 0.8)
+                root.BackgroundTransparency = 0.7
+                -- Restore sidebar/content visibility
+                Utility.Tween(sidebar, med, { BackgroundTransparency = 0.15 })
+                if searchBar then
+                    Utility.Tween(searchBar, med, { BackgroundTransparency = 0.3 })
+                end
+                -- Spring open
+                Utility.Tween(root, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = fullSize,
+                    BackgroundTransparency = T.GlassTransparency,
+                })
             else
-                -- Bar mode: expand, restore search
-                Utility.Tween(root, med, { Size = fullSize }, function()
+                Utility.Tween(root, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = fullSize }, function()
                     if searchBar then searchBar.Visible = true end
                 end)
             end
@@ -438,7 +469,7 @@ function Components.CreateWindow(opts)
     end)
 
     floatBtn.MouseButton1Click:Connect(function()
-        setMinimised(false)
+        setMinimised(not minimised)
     end)
 
     -- Keybind to toggle visibility
@@ -692,10 +723,10 @@ function Components.CreateWindow(opts)
             Utility.AddRipple(btn, T3.Accent)
 
             btn.MouseEnter:Connect(function()
-                Utility.Tween(frame, fast, { BackgroundColor3 = T3.SurfaceLighter, BackgroundTransparency = 0.2 })
+                Utility.Tween(frame, fast, { BackgroundColor3 = Theme.Current.SurfaceLighter, BackgroundTransparency = 0.2 })
             end)
             btn.MouseLeave:Connect(function()
-                Utility.Tween(frame, fast, { BackgroundColor3 = T3.SurfaceLight, BackgroundTransparency = 0.35 })
+                Utility.Tween(frame, fast, { BackgroundColor3 = Theme.Current.SurfaceLight, BackgroundTransparency = 0.35 })
             end)
             btn.MouseButton1Click:Connect(function()
                 if bOpts.Callback then bOpts.Callback() end
@@ -1209,16 +1240,16 @@ function Components.CreateWindow(opts)
             Utility.Round(preview, 6)
             Utility.Stroke(preview, T3.Border, 1, 0.4)
 
-            -- Expanded picker panel
+            -- Expanded picker panel — parented to contentArea to avoid clipping/overlap
             local pickerPanel = Utility.Create("Frame", {
                 BackgroundColor3 = T3.Surface,
-                BackgroundTransparency = 0.08,
+                BackgroundTransparency = 0.05,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0, 0, 1, 4),
-                Size = UDim2.new(1, 0, 0, 0),
+                Position = UDim2.new(0, 0, 0, 0),
+                Size = UDim2.new(0, 0, 0, 0),
                 Visible = false,
-                ZIndex = frame.ZIndex + 10,
-                Parent = frame,
+                ZIndex = 9000,
+                Parent = contentArea,
             })
             Utility.Round(pickerPanel, 10)
             Utility.Stroke(pickerPanel, T3.Border, 1, 0.4)
@@ -1309,13 +1340,24 @@ function Components.CreateWindow(opts)
                 ZIndex = frame.ZIndex + 3,
                 Parent = frame,
             })
+            local pickerTargetH = 22 * 3 + 6 * 2 + 20
+
             openBtn.MouseButton1Click:Connect(function()
                 open = not open
-                pickerPanel.Visible = true
-                local targetH = open and (22 * 3 + 6 * 2 + 20) or 0
-                Utility.Tween(pickerPanel, fast, { Size = UDim2.new(1, 0, 0, targetH) }, function()
-                    if not open then pickerPanel.Visible = false end
-                end)
+                if open then
+                    local absPos  = frame.AbsolutePosition
+                    local absSize = frame.AbsoluteSize
+                    local caPos   = contentArea.AbsolutePosition
+                    pickerPanel.Position = UDim2.new(0, absPos.X - caPos.X, 0, absPos.Y - caPos.Y + absSize.Y + 4)
+                    pickerPanel.Size = UDim2.new(0, absSize.X, 0, 0)
+                    pickerPanel.Visible = true
+                    Utility.Tween(pickerPanel, fast, { Size = UDim2.new(0, absSize.X, 0, pickerTargetH) })
+                else
+                    local w = pickerPanel.AbsoluteSize.X
+                    Utility.Tween(pickerPanel, fast, { Size = UDim2.new(0, w, 0, 0) }, function()
+                        pickerPanel.Visible = false
+                    end)
+                end
             end)
 
             if cOpts.Flag then
@@ -1454,30 +1496,45 @@ function Components.CreateWindow(opts)
                 Utility.Tween(tab.btn, fast, { BackgroundColor3 = T2.TabInactive })
             end
 
-            -- Recolor all named accent elements inside content
+            -- Recolor all elements inside content immediately
             local function recolorDescendants(parent)
                 for _, child in ipairs(parent:GetChildren()) do
                     local n = child.Name
+
                     if n == "ToggleTrack" and child:IsA("Frame") then
-                        local isOn = child.BackgroundColor3 ~= T2.ToggleOff
-                            and child.BackgroundColor3 ~= Color3.fromRGB(30, 35, 70)
-                            and child.BackgroundColor3 ~= Color3.fromRGB(40, 40, 60)
-                        if isOn then
-                            Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
-                        else
-                            Utility.Tween(child, fast, { BackgroundColor3 = T2.ToggleOff })
-                        end
+                        -- Detect on/off by comparing to known off colors
+                        local r,g,b = child.BackgroundColor3.R, child.BackgroundColor3.G, child.BackgroundColor3.B
+                        local isOff = (r < 0.2 and g < 0.2 and b < 0.35)
+                        Utility.Tween(child, fast, { BackgroundColor3 = isOff and T2.ToggleOff or T2.Accent })
+
                     elseif n == "SliderFill" and child:IsA("Frame") then
                         Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
+
                     elseif n == "SliderThumb" and child:IsA("Frame") then
                         local st = child:FindFirstChildWhichIsA("UIStroke")
                         if st then st.Color = T2.Accent end
-                    elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
-                        -- Recolor surface frames
-                        if child.BackgroundColor3 == Theme.Current.SurfaceLight then
-                            Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLight })
+
+                    elseif child:IsA("Frame") and child.BackgroundTransparency < 0.9 then
+                        -- Recolor all visible surface frames
+                        local r,g,b = child.BackgroundColor3.R, child.BackgroundColor3.G, child.BackgroundColor3.B
+                        local brightness = (r + g + b) / 3
+                        if brightness > 0.04 and brightness < 0.25 then
+                            -- Determine which surface level it is by brightness
+                            if brightness < 0.09 then
+                                Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLight })
+                            elseif brightness < 0.16 then
+                                Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLight })
+                            else
+                                Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLighter })
+                            end
+                        end
+                        -- Recolor UIStroke borders inside
+                        local st = child:FindFirstChildWhichIsA("UIStroke")
+                        if st and st.Color ~= Color3.new(1,1,1) then
+                            st.Color = T2.Border
                         end
                     end
+
                     recolorDescendants(child)
                 end
             end
