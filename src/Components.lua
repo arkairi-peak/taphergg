@@ -134,7 +134,7 @@ function Components.CreateWindow(opts)
         Utility.Create("TextLabel", {
             Name = "Subtitle",
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 50, 0, 18),
+            Position = UDim2.new(0, 50, 0, 30),
             Size = UDim2.new(0.5, 0, 0, 14),
             Text = opts.Subtitle,
             TextColor3 = T.TextMuted,
@@ -870,6 +870,8 @@ function Components.CreateWindow(opts)
             local listLayout = Utility.ListLayout(listFrame, Enum.FillDirection.Vertical, 2)
             Utility.Padding(listFrame, 4, 4, 4, 4)
 
+            local listTargetH = math.min(#options * 30 + 8, 150)
+
             local function populateList()
                 for _, child in ipairs(listFrame:GetChildren()) do
                     if child:IsA("TextButton") then child:Destroy() end
@@ -892,7 +894,8 @@ function Components.CreateWindow(opts)
                         selected = opt
                         selLabel.Text = selected
                         open = false
-                        Utility.Tween(listFrame, fast, { Size = UDim2.new(1, 0, 0, 0) }, function()
+                        local w = listFrame.AbsoluteSize.X
+                        Utility.Tween(listFrame, fast, { Size = UDim2.new(0, w, 0, 0) }, function()
                             listFrame.Visible = false
                         end)
                         Utility.Tween(arrow, fast, { Rotation = 0 })
@@ -900,9 +903,8 @@ function Components.CreateWindow(opts)
                         populateList()
                     end)
                 end
-                local totalH = math.min(#options * 30 + 8, 150)
+                listTargetH = math.min(#options * 30 + 8, 150)
                 listFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-                listFrame._targetH = totalH
             end
             populateList()
 
@@ -917,17 +919,16 @@ function Components.CreateWindow(opts)
             openBtn.MouseButton1Click:Connect(function()
                 open = not open
                 if open then
-                    -- Position list just below the frame in absolute screen space
                     local absPos  = frame.AbsolutePosition
                     local absSize = frame.AbsoluteSize
                     local caPos   = contentArea.AbsolutePosition
                     listFrame.Position = UDim2.new(0, absPos.X - caPos.X, 0, absPos.Y - caPos.Y + absSize.Y + 4)
                     listFrame.Size = UDim2.new(0, absSize.X, 0, 0)
                     listFrame.Visible = true
-                    local targetH = listFrame._targetH or 120
-                    Utility.Tween(listFrame, fast, { Size = UDim2.new(0, absSize.X, 0, targetH) })
+                    Utility.Tween(listFrame, fast, { Size = UDim2.new(0, absSize.X, 0, listTargetH) })
                 else
-                    Utility.Tween(listFrame, fast, { Size = UDim2.new(0, listFrame.AbsoluteSize.X, 0, 0) }, function()
+                    local w = listFrame.AbsoluteSize.X
+                    Utility.Tween(listFrame, fast, { Size = UDim2.new(0, w, 0, 0) }, function()
                         listFrame.Visible = false
                     end)
                 end
