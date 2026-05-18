@@ -318,10 +318,125 @@ function Components.CreateWindow(opts)
     -- Dragging
     Utility.MakeDraggable(titleBar, root)
 
+    -- Bottom drag handle bar
+    local dragHandle = Utility.Create("Frame", {
+        Name = "DragHandle",
+        BackgroundColor3 = T.SurfaceLight,
+        BackgroundTransparency = 0.3,
+        BorderSizePixel = 0,
+        AnchorPoint = Vector2.new(0, 1),
+        Position = UDim2.new(0, 0, 1, 0),
+        Size = UDim2.new(1, 0, 0, 18),
+        ZIndex = root.ZIndex + 2,
+        Parent = root,
+    })
+    Utility.Round(dragHandle, 0)
+    -- White drag line indicator
+    Utility.Create("Frame", {
+        Name = "DragLine",
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BackgroundTransparency = 0.65,
+        BorderSizePixel = 0,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, 40, 0, 3),
+        ZIndex = dragHandle.ZIndex + 1,
+        Parent = dragHandle,
+    })
+    -- Round the bottom corners of drag handle to match window
+    local dhCorner = Instance.new("UICorner")
+    dhCorner.CornerRadius = UDim.new(0, 14)
+    dhCorner.Parent = dragHandle
+    -- Make drag handle also draggable
+    Utility.MakeDraggable(dragHandle, root)
+
+    -- Floating toggle button (shown when UI is fully minimised via MinimiseMode = "Float")
+    local floatBtn = Utility.Create("TextButton", {
+        Name = "FloatToggle",
+        BackgroundColor3 = T.Accent,
+        BackgroundTransparency = 0.1,
+        BorderSizePixel = 0,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, 48, 0, 48),
+        Text = "",
+        Visible = false,
+        ZIndex = 500,
+        Parent = screenGui,
+    })
+    Utility.Round(floatBtn, 15)
+    Utility.Stroke(floatBtn, T.Border, 1, 0.4)
+    Utility.Shadow(floatBtn, 10, 0.5)
+
+    -- Float button logo (image or text icon)
+    local floatIcon
+    if opts.FloatImage then
+        floatIcon = Utility.Create("ImageLabel", {
+            Name = "FloatIcon",
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -8, 1, -8),
+            Position = UDim2.new(0, 4, 0, 4),
+            Image = opts.FloatImage,
+            ZIndex = floatBtn.ZIndex + 1,
+            Parent = floatBtn,
+        })
+        Utility.Round(floatIcon, 10)
+    else
+        floatIcon = Utility.Create("TextLabel", {
+            Name = "FloatIcon",
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 1, 0),
+            Text = opts.Icon or "◈",
+            TextColor3 = Color3.new(1, 1, 1),
+            TextScaled = true,
+            Font = Enum.Font.GothamBold,
+            ZIndex = floatBtn.ZIndex + 1,
+            Parent = floatBtn,
+        })
+        Utility.Padding(floatIcon, 10, 10, 10, 10)
+    end
+    Utility.MakeDraggable(floatBtn, floatBtn)
+
     -- Close / minimise logic
     local minimised = false
     local fullSize  = UDim2.new(0, winW, 0, winH)
     local miniSize  = UDim2.new(0, winW, 0, 48)
+    local minimiseMode = opts.MinimiseMode or "Bar" -- "Bar" or "Float"
+
+    local function setMinimised(state)
+        minimised = state
+        if minimised then
+            if minimiseMode == "Float" then
+                -- Shrink window to nothing, show float button
+                Utility.Tween(root, med, { Size = UDim2.new(0, winW, 0, 0), BackgroundTransparency = 1 }, function()
+                    root.Visible = false
+                    floatBtn.Visible = true
+                    floatBtn.Size = UDim2.new(0, 0, 0, 0)
+                    Utility.Tween(floatBtn, med, { Size = UDim2.new(0, 48, 0, 48) })
+                end)
+            else
+                -- Bar mode: shrink to title bar only, hide search
+                if searchBar then searchBar.Visible = false end
+                Utility.Tween(root, med, { Size = miniSize })
+            end
+        else
+            if minimiseMode == "Float" then
+                -- Hide float button, expand window
+                Utility.Tween(floatBtn, fast, { Size = UDim2.new(0, 0, 0, 0) }, function()
+                    floatBtn.Visible = false
+                    root.Visible = true
+                    root.Size = UDim2.new(0, winW, 0, 0)
+                    root.BackgroundTransparency = 1
+                    Utility.Tween(root, slow, { Size = fullSize, BackgroundTransparency = T.GlassTransparency })
+                end)
+            else
+                -- Bar mode: expand, restore search
+                Utility.Tween(root, med, { Size = fullSize }, function()
+                    if searchBar then searchBar.Visible = true end
+                end)
+            end
+        end
+    end
 
     closeBtn.MouseButton1Click:Connect(function()
         Utility.Tween(root, med, { Size = UDim2.new(0, winW, 0, 0), BackgroundTransparency = 1 }, function()
@@ -331,14 +446,21 @@ function Components.CreateWindow(opts)
     end)
 
     minBtn.MouseButton1Click:Connect(function()
-        minimised = not minimised
-        Utility.Tween(root, med, { Size = minimised and miniSize or fullSize })
+        setMinimised(not minimised)
+    end)
+
+    floatBtn.MouseButton1Click:Connect(function()
+        setMinimised(false)
     end)
 
     -- Keybind to toggle visibility
     if opts.Keybind then
         Utility.OnKeybind(opts.Keybind, function()
-            root.Visible = not root.Visible
+            if minimiseMode == "Float" then
+                setMinimised(not minimised)
+            else
+                root.Visible = not root.Visible
+            end
         end)
     end
 
@@ -1296,65 +1418,78 @@ function Components.CreateWindow(opts)
         activeBtns = {},
     }
 
-    -- Live accent recolor — updates every accent element in the whole window
+    -- Live full theme recolor
     function Window:RefreshAccent()
         local T2 = Theme.Current
 
-        -- Title logo box
+        -- Root window
+        Utility.Tween(root, med, { BackgroundColor3 = T2.Surface })
+        local rootStroke = root:FindFirstChildWhichIsA("UIStroke")
+        if rootStroke then
+            Utility.Tween(rootStroke, fast, { Color = T2.Border })
+        end
+
+        -- Shimmer tint
+        shimmer.BackgroundColor3 = Color3.new(1,1,1)
+
+        -- Sidebar
+        Utility.Tween(sidebar, med, { BackgroundColor3 = T2.Background })
+
+        -- Drag handle
+        Utility.Tween(dragHandle, med, { BackgroundColor3 = T2.SurfaceLight })
+
+        -- Logo box
         Utility.Tween(logoBox, fast, { BackgroundColor3 = T2.Accent })
 
-        -- Root border stroke
-        local rootStroke = root:FindFirstChildWhichIsA("UIStroke")
-        if rootStroke then rootStroke.Color = T2.Border end
+        -- Float button
+        Utility.Tween(floatBtn, fast, { BackgroundColor3 = T2.Accent })
 
-        -- Sidebar accent tint gradient
-        Utility.Tween(sidebar, fast, { BackgroundColor3 = T2.Background })
+        -- Search bar
+        if searchBar then
+            Utility.Tween(searchBar, med, { BackgroundColor3 = T2.InputBg })
+            local sbStroke = searchBar:FindFirstChildWhichIsA("UIStroke")
+            if sbStroke then sbStroke.Color = T2.Border end
+        end
 
         -- All tabs
         for _, tab in ipairs(tabs) do
-            -- Scroll bar color
             tab.content.ScrollBarImageColor3 = T2.Accent
-
-            -- Indicator bar
             Utility.Tween(tab.indicator, fast, { BackgroundColor3 = T2.Accent })
 
-            -- Active tab button color
             if tab == activeTab then
                 Utility.Tween(tab.btn, fast, { BackgroundColor3 = T2.Accent })
+            else
+                Utility.Tween(tab.btn, fast, { BackgroundColor3 = T2.TabInactive })
             end
 
-            -- Walk every UI element inside this tab's content and recolor accent pieces
+            -- Recolor all named accent elements inside content
             local function recolorDescendants(parent)
                 for _, child in ipairs(parent:GetChildren()) do
                     local n = child.Name
-                    -- Toggle tracks ON state
                     if n == "ToggleTrack" and child:IsA("Frame") then
                         local isOn = child.BackgroundColor3 ~= T2.ToggleOff
                             and child.BackgroundColor3 ~= Color3.fromRGB(30, 35, 70)
+                            and child.BackgroundColor3 ~= Color3.fromRGB(40, 40, 60)
                         if isOn then
                             Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
+                        else
+                            Utility.Tween(child, fast, { BackgroundColor3 = T2.ToggleOff })
                         end
-                    end
-                    -- Slider fills
-                    if n == "SliderFill" and child:IsA("Frame") then
+                    elseif n == "SliderFill" and child:IsA("Frame") then
                         Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
-                    end
-                    -- Slider thumb stroke
-                    if n == "SliderThumb" and child:IsA("Frame") then
+                    elseif n == "SliderThumb" and child:IsA("Frame") then
                         local st = child:FindFirstChildWhichIsA("UIStroke")
                         if st then st.Color = T2.Accent end
+                    elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
+                        -- Recolor surface frames
+                        if child.BackgroundColor3 == Theme.Current.SurfaceLight then
+                            Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLight })
+                        end
                     end
-                    -- Recurse
                     recolorDescendants(child)
                 end
             end
             recolorDescendants(tab.content)
-        end
-
-        -- Search bar stroke
-        if searchBar then
-            local sb_stroke = searchBar:FindFirstChildWhichIsA("UIStroke")
-            if sb_stroke then sb_stroke.Color = T2.Border end
         end
     end
 
