@@ -20,7 +20,7 @@ local Window = Tapher:CreateWindow({
     Keybind       = Enum.KeyCode.RightShift,
     Watermark     = true,
     SearchBar     = true,
-    MinimiseMode  = "Float",               -- "Bar" or "Float"
+    MinimiseMode  = "Bar",               -- "Bar" or "Float"
     FloatImage    = "rbxassetid://96079999593461",                   -- set to a raw PNG URL or rbxassetid://XXXXX
                                            -- e.g. "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src/logo.png"
                                            -- if nil, falls back to Icon text
