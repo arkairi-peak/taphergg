@@ -3,7 +3,7 @@
     Core loader — entry point for the library.
     
     Usage:
-        local Tapher = loadstring(game:HttpGet('YOUR_RAW_URL/TapherLib/Main.lua'))()
+        local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src'))()
 
         local Window = Tapher:CreateWindow({
             Title    = "My Script",
@@ -82,7 +82,7 @@
 ]]
 
 -- ── Module paths (update BASE_URL before hosting) ───────────────────────────
-local BASE_URL = "YOUR_RAW_URL_HERE"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
+local BASE_URL = "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
 
 local function req(path)
     -- Try loadstring from URL first, fall back to require for local dev
