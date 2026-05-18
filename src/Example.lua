@@ -21,7 +21,7 @@ local Window = Tapher:CreateWindow({
     Watermark     = true,
     SearchBar     = true,
     MinimiseMode  = "Float",               -- "Bar" or "Float"
-    FloatImage    = nil,                   -- set to a raw PNG URL or rbxassetid://XXXXX
+    FloatImage    = "rbxassetid://88401087334558",                   -- set to a raw PNG URL or rbxassetid://XXXXX
                                            -- e.g. "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src/logo.png"
                                            -- if nil, falls back to Icon text
 })
