@@ -114,33 +114,36 @@ function Components.CreateWindow(opts)
     })
     Utility.Padding(logoBox, 4,4,4,4)
 
-    -- Title text
+    -- Title text — shifts up when subtitle present
+    local titleYPos = opts.Subtitle and UDim2.new(0, 50, 0, 7) or UDim2.new(0, 50, 0.5, -8)
     Utility.Create("TextLabel", {
         Name = "Title",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 50, 0, 0),
-        Size = UDim2.new(0.6, 0, 1, 0),
+        Position = titleYPos,
+        Size = UDim2.new(0, winW - 120, 0, 16),
         Text = opts.Title or "TapherLib",
         TextColor3 = T.TextPrimary,
-        TextSize = 15,
+        TextSize = 14,
         Font = Enum.Font.GothamBold,
         TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         ZIndex = root.ZIndex + 2,
         Parent = titleBar,
     })
 
-    -- Subtitle
+    -- Subtitle sits directly below title, no overlap
     if opts.Subtitle then
         Utility.Create("TextLabel", {
             Name = "Subtitle",
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 50, 0, 30),
-            Size = UDim2.new(0.5, 0, 0, 14),
+            Position = UDim2.new(0, 50, 0, 25),
+            Size = UDim2.new(0, winW - 120, 0, 13),
             Text = opts.Subtitle,
             TextColor3 = T.TextMuted,
             TextSize = 10,
             Font = Enum.Font.Gotham,
             TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
             ZIndex = root.ZIndex + 2,
             Parent = titleBar,
         })
@@ -270,9 +273,9 @@ function Components.CreateWindow(opts)
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 8, 0, 0),
             Size = UDim2.new(0, 20, 1, 0),
-            Text = "⌕",
+            Text = "🔍",
             TextColor3 = T.TextMuted,
-            TextSize = 14,
+            TextSize = 12,
             Font = Enum.Font.Gotham,
             ZIndex = root.ZIndex + 3,
             Parent = searchBar,
@@ -511,34 +514,37 @@ function Components.CreateWindow(opts)
                 Parent = frame,
             })
 
+            local hasDesc = bOpts.Description ~= nil
+            frame.Size = UDim2.new(1, 0, 0, hasDesc and 52 or 38)
+
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 14, 0, 0),
-                Size = UDim2.new(0.7, 0, 1, 0),
+                Position = hasDesc and UDim2.new(0, 14, 0, 8) or UDim2.new(0, 14, 0.5, -7),
+                Size = UDim2.new(1, -60, 0, 16),
                 Text = bOpts.Name or "Button",
                 TextColor3 = T3.TextPrimary,
                 TextSize = 12,
                 Font = Enum.Font.GothamBold,
                 TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
                 ZIndex = frame.ZIndex + 2,
                 Parent = frame,
             })
 
-            local descLabel
-            if bOpts.Description then
+            if hasDesc then
                 Utility.Create("TextLabel", {
                     BackgroundTransparency = 1,
-                    Position = UDim2.new(0, 14, 0, 18),
-                    Size = UDim2.new(0.7, 0, 0, 14),
+                    Position = UDim2.new(0, 14, 0, 28),
+                    Size = UDim2.new(1, -60, 0, 14),
                     Text = bOpts.Description,
                     TextColor3 = T3.TextMuted,
                     TextSize = 10,
                     Font = Enum.Font.Gotham,
                     TextXAlignment = Enum.TextXAlignment.Left,
+                    TextTruncate = Enum.TextTruncate.AtEnd,
                     ZIndex = frame.ZIndex + 2,
                     Parent = frame,
                 })
-                frame.Size = UDim2.new(1, 0, 0, 50)
             end
 
             -- Right arrow
@@ -843,9 +849,9 @@ function Components.CreateWindow(opts)
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, -10, 0.5, 0),
                 Size = UDim2.new(0, 16, 0, 16),
-                Text = "▾",
+                Text = "v",
                 TextColor3 = T3.TextMuted,
-                TextSize = 12,
+                TextSize = 10,
                 Font = Enum.Font.GothamBold,
                 ZIndex = frame.ZIndex + 2,
                 Parent = frame,
@@ -1238,14 +1244,16 @@ function Components.CreateWindow(opts)
             })
             if label then
                 local bg = Utility.Create("Frame", {
-                    BackgroundColor3 = T3.Surface,
+                    BackgroundColor3 = T3.SurfaceLight,
                     BorderSizePixel = 0,
                     AnchorPoint = Vector2.new(0.5, 0.5),
                     Position = UDim2.new(0.5, 0, 0.5, 0),
-                    Size = UDim2.new(0, #label * 7 + 16, 1, 0),
+                    Size = UDim2.new(0, #label * 7 + 20, 0, 16),
                     ZIndex = sep.ZIndex + 2,
                     Parent = sep,
                 })
+                Utility.Round(bg, 99)
+                Utility.Stroke(bg, T3.Border, 1, 0.5)
                 Utility.Create("TextLabel", {
                     BackgroundTransparency = 1,
                     Size = UDim2.new(1, 0, 1, 0),
@@ -1262,6 +1270,40 @@ function Components.CreateWindow(opts)
         end
 
         return Tab
+    end
+
+    -- Registry of accent-colored elements for live recoloring
+    local accentElements = {
+        logoBox = logoBox,
+        tabIndicators = {},
+        activeBtns = {},
+    }
+
+    -- Live accent recolor — call this after Tapher:SetAccent()
+    function Window:RefreshAccent()
+        local T2 = Theme.Current
+        -- Logo box
+        logoBox.BackgroundColor3 = T2.Accent
+        -- Active tab button
+        if activeTab then
+            Utility.Tween(activeTab.btn, fast, { BackgroundColor3 = T2.Accent })
+            activeTab.indicator.BackgroundColor3 = T2.Accent
+        end
+        -- All tab scroll bar
+        for _, tab in ipairs(tabs) do
+            tab.content.ScrollBarImageColor3 = T2.Accent
+            tab.indicator.BackgroundColor3 = T2.Accent
+            -- Recolor all strokes/fills inside content
+            for _, comp in ipairs(tab.components) do
+                if comp.accentRef then
+                    for _, ref in ipairs(comp.accentRef) do
+                        if ref.instance and ref.instance.Parent then
+                            ref.instance[ref.prop] = T2[ref.key] or T2.Accent
+                        end
+                    end
+                end
+            end
+        end
     end
 
     function Window:Destroy()
