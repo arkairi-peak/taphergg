@@ -40,11 +40,6 @@ function Components.CreateWindow(opts)
     local ok = pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
     if not ok then screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end
 
-    -- Blur
-    local blur = Instance.new("BlurEffect")
-    blur.Size = 0
-    blur.Parent = game:GetService("Lighting")
-
     -- Root frame
     local isMobile = Utility.IsMobile()
     local winW = isMobile and 340 or 560
@@ -407,12 +402,9 @@ function Components.CreateWindow(opts)
         minimised = state
         if minimised then
             if minimiseMode == "Float" then
-                -- Shrink window to nothing, show float button
+                -- Shrink window to nothing, float button stays visible
                 Utility.Tween(root, med, { Size = UDim2.new(0, winW, 0, 0), BackgroundTransparency = 1 }, function()
                     root.Visible = false
-                    floatBtn.Visible = true
-                    floatBtn.Size = UDim2.new(0, 0, 0, 0)
-                    Utility.Tween(floatBtn, med, { Size = UDim2.new(0, 48, 0, 48) })
                 end)
             else
                 -- Bar mode: shrink to title bar only, hide search
@@ -421,14 +413,11 @@ function Components.CreateWindow(opts)
             end
         else
             if minimiseMode == "Float" then
-                -- Hide float button, expand window
-                Utility.Tween(floatBtn, fast, { Size = UDim2.new(0, 0, 0, 0) }, function()
-                    floatBtn.Visible = false
-                    root.Visible = true
-                    root.Size = UDim2.new(0, winW, 0, 0)
-                    root.BackgroundTransparency = 1
-                    Utility.Tween(root, slow, { Size = fullSize, BackgroundTransparency = T.GlassTransparency })
-                end)
+                -- Expand window back, float button stays visible
+                root.Visible = true
+                root.Size = UDim2.new(0, winW, 0, 0)
+                root.BackgroundTransparency = 1
+                Utility.Tween(root, slow, { Size = fullSize, BackgroundTransparency = T.GlassTransparency })
             else
                 -- Bar mode: expand, restore search
                 Utility.Tween(root, med, { Size = fullSize }, function()
@@ -441,7 +430,6 @@ function Components.CreateWindow(opts)
     closeBtn.MouseButton1Click:Connect(function()
         Utility.Tween(root, med, { Size = UDim2.new(0, winW, 0, 0), BackgroundTransparency = 1 }, function()
             screenGui:Destroy()
-            blur:Destroy()
         end)
     end)
 
@@ -464,14 +452,18 @@ function Components.CreateWindow(opts)
         end)
     end
 
-    -- Entrance animation
+    -- Float button always visible from start in Float mode, acts as toggle
+    if minimiseMode == "Float" then
+        floatBtn.Visible = true
+    end
+
+    -- Entrance animation — NO blur (glassmorphism is from window transparency alone)
     root.Size = UDim2.new(0, winW, 0, 0)
     root.BackgroundTransparency = 1
     Utility.Tween(root, slow, {
         Size = fullSize,
         BackgroundTransparency = T.GlassTransparency,
     })
-    Utility.Tween(blur, slow, { Size = T.BlurSize })
 
     -- ── Tab system ────────────────────────────────────────────────────────────
     local tabs = {}
@@ -1499,7 +1491,6 @@ function Components.CreateWindow(opts)
             BackgroundTransparency = 1,
         }, function()
             screenGui:Destroy()
-            blur:Destroy()
         end)
     end
 
