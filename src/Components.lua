@@ -40,10 +40,11 @@ function Components.CreateWindow(opts)
     local ok = pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
     if not ok then screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end
 
-    -- Root frame
+    -- Root frame — wider and more rectangular
     local isMobile = Utility.IsMobile()
-    local winW = isMobile and 340 or 560
-    local winH = isMobile and 420 or 500
+    local winW = isMobile and 360 or 620
+    local winH = isMobile and 400 or 480
+    local sideW = isMobile and 52 or 58
 
     local root = Utility.Create("Frame", {
         Name = "TapherWindow",
@@ -85,10 +86,10 @@ function Components.CreateWindow(opts)
         Parent = root,
     })
 
-    -- Logo / icon area
+    -- Logo / icon area — supports rbxassetid image or text symbol
     local logoBox = Utility.Create("Frame", {
         BackgroundColor3 = T.Accent,
-        BackgroundTransparency = 0.2,
+        BackgroundTransparency = 0.15,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 12, 0.5, 0),
         AnchorPoint = Vector2.new(0, 0.5),
@@ -97,17 +98,30 @@ function Components.CreateWindow(opts)
         Parent = titleBar,
     })
     Utility.Round(logoBox, 7)
-    Utility.Create("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1,0,1,0),
-        Text = opts.Icon or "◈",
-        TextColor3 = Color3.new(1,1,1),
-        TextScaled = true,
-        Font = Enum.Font.GothamBold,
-        ZIndex = root.ZIndex + 3,
-        Parent = logoBox,
-    })
-    Utility.Padding(logoBox, 4,4,4,4)
+
+    if opts.LogoImage then
+        Utility.Create("ImageLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -4, 1, -4),
+            Position = UDim2.new(0, 2, 0, 2),
+            Image = opts.LogoImage,
+            ScaleType = Enum.ScaleType.Fit,
+            ZIndex = root.ZIndex + 3,
+            Parent = logoBox,
+        })
+    else
+        local logoText = Utility.Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 1, 0),
+            Text = opts.Icon or "◈",
+            TextColor3 = Color3.new(1, 1, 1),
+            TextScaled = true,
+            Font = Enum.Font.GothamBold,
+            ZIndex = root.ZIndex + 3,
+            Parent = logoBox,
+        })
+        Utility.Padding(logoText, 4, 4, 4, 4)
+    end
 
     -- Title text — shifts up when subtitle present
     local titleYPos = opts.Subtitle and UDim2.new(0, 50, 0, 7) or UDim2.new(0, 50, 0.5, -8)
@@ -209,22 +223,20 @@ function Components.CreateWindow(opts)
         })
     end
 
-    -- Sidebar — darker tinted panel, rounded bottom-left to match window
+    -- Sidebar — icon only, narrow
     local sidebar = Utility.Create("Frame", {
         Name = "Sidebar",
         BackgroundColor3 = T.Background,
         BackgroundTransparency = 0.15,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 48),
-        Size = UDim2.new(0, isMobile and 80 or 110, 1, -48),
+        Size = UDim2.new(0, sideW, 1, -48),
         ZIndex = root.ZIndex + 1,
         Parent = root,
     })
-    -- Bottom-left rounded corner only (fake it by placing a corner frame)
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, 14)
     sidebarCorner.Parent = sidebar
-    -- Right edge straight divider line
     Utility.Create("Frame", {
         BackgroundColor3 = T.Border,
         BackgroundTransparency = 0.55,
@@ -247,17 +259,17 @@ function Components.CreateWindow(opts)
         ZIndex = root.ZIndex + 2,
         Parent = sidebar,
     })
-    local tabLayout = Utility.ListLayout(tabList, Enum.FillDirection.Vertical, 4)
+    local tabLayout = Utility.ListLayout(tabList, Enum.FillDirection.Vertical, 6)
     tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Utility.Padding(tabList, 0, 6, 0, 6)
+    Utility.Padding(tabList, 4, 0, 4, 0)
 
     -- Content area
     local contentArea = Utility.Create("Frame", {
         Name = "ContentArea",
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, isMobile and 80 or 110, 0, 48),
-        Size = UDim2.new(1, -(isMobile and 80 or 110), 1, -48),
+        Position = UDim2.new(0, sideW, 0, 48),
+        Size = UDim2.new(1, -sideW, 1, -48),
         ZIndex = root.ZIndex + 1,
         Parent = root,
     })
@@ -353,7 +365,7 @@ function Components.CreateWindow(opts)
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 68, 0, 68),
+        Size = UDim2.new(0, 48, 0, 48),
         Text = "",
         Visible = false,
         ZIndex = 500,
@@ -530,53 +542,80 @@ function Components.CreateWindow(opts)
         local tabName = tabOpts.Name or ("Tab " .. #tabs + 1)
         local T2 = Theme.Current
 
-        -- Sidebar button
+        -- Sidebar button — icon only, square
         local tabBtn = Utility.Create("TextButton", {
             Name = tabName,
             BackgroundColor3 = T2.TabInactive,
             BackgroundTransparency = 0.4,
             BorderSizePixel = 0,
-            Size = UDim2.new(1, -12, 0, 36),
+            Size = UDim2.new(1, -10, 0, 38),
             Text = "",
             ZIndex = root.ZIndex + 3,
             Parent = tabList,
         })
-        Utility.Round(tabBtn, 8)
+        Utility.Round(tabBtn, 10)
 
-        -- Icon
+        -- Icon centered
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 6, 0, 0),
-            Size = UDim2.new(0, 20, 1, 0),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = UDim2.new(1, -8, 1, -8),
             Text = tabOpts.Icon or "◉",
             TextColor3 = T2.TextMuted,
-            TextSize = 13,
+            TextScaled = true,
             Font = Enum.Font.GothamBold,
             ZIndex = root.ZIndex + 4,
             Name = "Icon",
             Parent = tabBtn,
         })
 
+        -- Hidden label (kept for SetActiveTab compatibility)
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 28, 0, 0),
-            Size = UDim2.new(1, -30, 1, 0),
+            Size = UDim2.new(0, 0, 0, 0),
             Text = tabName,
             TextColor3 = T2.TextSecondary,
             TextSize = 11,
             Font = Enum.Font.GothamBold,
-            TextXAlignment = Enum.TextXAlignment.Left,
+            Visible = false,
             ZIndex = root.ZIndex + 4,
             Name = "Label",
             Parent = tabBtn,
         })
 
-        -- Active indicator bar
+        -- Tooltip on hover
+        local tooltip = Utility.Create("TextLabel", {
+            BackgroundColor3 = T2.SurfaceLighter,
+            BackgroundTransparency = 0,
+            BorderSizePixel = 0,
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = UDim2.new(1, 8, 0.5, 0),
+            Size = UDim2.new(0, #tabName * 7 + 16, 0, 22),
+            Text = tabName,
+            TextColor3 = T2.TextPrimary,
+            TextSize = 11,
+            Font = Enum.Font.GothamBold,
+            Visible = false,
+            ZIndex = root.ZIndex + 20,
+            Parent = tabBtn,
+        })
+        Utility.Round(tooltip, 6)
+        Utility.Stroke(tooltip, T2.Border, 1, 0.4)
+
+        tabBtn.MouseEnter:Connect(function()
+            tooltip.Visible = true
+        end)
+        tabBtn.MouseLeave:Connect(function()
+            tooltip.Visible = false
+        end)
+
+        -- Active indicator bar (left edge)
         local indicator = Utility.Create("Frame", {
             BackgroundColor3 = T2.Accent,
             BorderSizePixel = 0,
-            Position = UDim2.new(0, 0, 0.2, 0),
-            Size = UDim2.new(0, 3, 0.6, 0),
+            Position = UDim2.new(0, 0, 0.15, 0),
+            Size = UDim2.new(0, 3, 0.7, 0),
             ZIndex = root.ZIndex + 4,
             Visible = false,
             Parent = tabBtn,
@@ -1442,6 +1481,7 @@ function Components.CreateWindow(opts)
             return sep
         end
 
+        Tab._content = content
         return Tab
     end
 
@@ -1540,6 +1580,257 @@ function Components.CreateWindow(opts)
             end
             recolorDescendants(tab.content)
         end
+    end
+
+    -- ── Home Page ──────────────────────────────────────────────────────────────
+    function Window:AddHomePage(hOpts)
+        hOpts = hOpts or {}
+        local T2   = Theme.Current
+        local Players     = game:GetService("Players")
+        local lp          = Players.LocalPlayer
+        local statsService = game:GetService("Stats")
+        local NetworkClient = game:GetService("NetworkClient")
+
+        -- Make a dedicated tab for home
+        local homeTab = self:AddTab({ Name = hOpts.TabName or "Home", Icon = hOpts.TabIcon or "⌂" })
+        local content = homeTab._content
+
+        -- ── Player header card ──────────────────────────────────────────────
+        local headerCard = Utility.Create("Frame", {
+            BackgroundColor3 = T2.SurfaceLight,
+            BackgroundTransparency = 0.2,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 0, 68),
+            ZIndex = content.ZIndex + 1,
+            Parent = content,
+        })
+        Utility.Round(headerCard, 10)
+        Utility.Stroke(headerCard, T2.Accent, 1, 0.6)
+
+        -- Avatar thumbnail
+        local avatarImg = Utility.Create("ImageLabel", {
+            BackgroundColor3 = T2.Surface,
+            BackgroundTransparency = 0.3,
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, 10, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            Size = UDim2.new(0, 48, 0, 48),
+            Image = "rbxthumb://type=AvatarHeadShot&id=" .. lp.UserId .. "&w=150&h=150",
+            ZIndex = content.ZIndex + 2,
+            Parent = headerCard,
+        })
+        Utility.Round(avatarImg, 10)
+        Utility.Stroke(avatarImg, T2.Accent, 2, 0.4)
+
+        -- Greeting
+        Utility.Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 68, 0, 12),
+            Size = UDim2.new(1, -80, 0, 20),
+            Text = "Hello, " .. lp.DisplayName .. "!",
+            TextColor3 = T2.TextPrimary,
+            TextSize = 14,
+            Font = Enum.Font.GothamBold,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = content.ZIndex + 2,
+            Parent = headerCard,
+        })
+
+        -- Username + executor
+        local execName = "Unknown Executor"
+        pcall(function()
+            if identifyexecutor then
+                execName = identifyexecutor()
+            elseif getexecutorname then
+                execName = getexecutorname()
+            end
+        end)
+
+        Utility.Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 68, 0, 33),
+            Size = UDim2.new(1, -80, 0, 14),
+            Text = "@" .. lp.Name .. "  •  " .. execName,
+            TextColor3 = T2.TextMuted,
+            TextSize = 10,
+            Font = Enum.Font.Gotham,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = content.ZIndex + 2,
+            Parent = headerCard,
+        })
+
+        -- Custom badge (e.g. "Premium", "Owner")
+        if hOpts.Badge then
+            local badge = Utility.Create("Frame", {
+                BackgroundColor3 = T2.Accent,
+                BackgroundTransparency = 0.2,
+                BorderSizePixel = 0,
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, -10, 0.5, 0),
+                Size = UDim2.new(0, #hOpts.Badge * 7 + 16, 0, 20),
+                ZIndex = content.ZIndex + 2,
+                Parent = headerCard,
+            })
+            Utility.Round(badge, 99)
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                Text = hOpts.Badge,
+                TextColor3 = Color3.new(1, 1, 1),
+                TextSize = 10,
+                Font = Enum.Font.GothamBold,
+                ZIndex = badge.ZIndex + 1,
+                Parent = badge,
+            })
+        end
+
+        -- ── Server info grid ─────────────────────────────────────────────────
+        local sectionLabel = Utility.Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 18),
+            Text = "SERVER INFO",
+            TextColor3 = T2.TextMuted,
+            TextSize = 9,
+            Font = Enum.Font.GothamBold,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = content.ZIndex + 1,
+            Parent = content,
+        })
+        Utility.Padding(sectionLabel, 0, 0, 0, 2)
+
+        -- Grid container
+        local grid = Utility.Create("Frame", {
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 0, 108),
+            ZIndex = content.ZIndex + 1,
+            Parent = content,
+        })
+
+        local gridLayout = Instance.new("UIGridLayout")
+        gridLayout.CellSize = UDim2.new(0.5, -4, 0, 50)
+        gridLayout.CellPadding = UDim2.new(0, 6, 0, 6)
+        gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        gridLayout.Parent = grid
+
+        local function makeCard(title, valueFunc, icon)
+            local card = Utility.Create("Frame", {
+                BackgroundColor3 = T2.SurfaceLight,
+                BackgroundTransparency = 0.3,
+                BorderSizePixel = 0,
+                ZIndex = content.ZIndex + 2,
+                Parent = grid,
+            })
+            Utility.Round(card, 8)
+            Utility.Stroke(card, T2.Border, 1, 0.6)
+
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 10, 0, 6),
+                Size = UDim2.new(1, -14, 0, 12),
+                Text = (icon and icon .. "  " or "") .. title:upper(),
+                TextColor3 = T2.TextMuted,
+                TextSize = 9,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = card.ZIndex + 1,
+                Parent = card,
+            })
+
+            local valLabel = Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 10, 0, 22),
+                Size = UDim2.new(1, -14, 0, 20),
+                Text = "...",
+                TextColor3 = T2.TextPrimary,
+                TextSize = 13,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
+                ZIndex = card.ZIndex + 1,
+                Parent = card,
+            })
+
+            -- Update value
+            task.spawn(function()
+                while valLabel and valLabel.Parent do
+                    local ok, val = pcall(valueFunc)
+                    valLabel.Text = ok and tostring(val) or "N/A"
+                    task.wait(2)
+                end
+            end)
+
+            return card
+        end
+
+        -- Players
+        makeCard("Players", function()
+            local count = #Players:GetPlayers()
+            local max   = game.Players.MaxPlayers
+            return count .. " / " .. max
+        end, "👥")
+
+        -- Latency
+        makeCard("Latency", function()
+            return math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()) .. " ms"
+        end, "📶")
+
+        -- Server Region (Job ID shortened as proxy)
+        makeCard("Job ID", function()
+            return game.JobId ~= "" and game.JobId:sub(1, 8) .. "..." or "Studio"
+        end, "🌐")
+
+        -- In Server For
+        local joinTime = os.time()
+        makeCard("In Server For", function()
+            local elapsed = os.time() - joinTime
+            local m = math.floor(elapsed / 60)
+            local s = elapsed % 60
+            return string.format("%02d:%02d", m, s)
+        end, "⏱")
+
+        -- ── Script info ───────────────────────────────────────────────────────
+        if hOpts.ScriptName or hOpts.ScriptVersion then
+            local infoCard = Utility.Create("Frame", {
+                BackgroundColor3 = T2.Accent,
+                BackgroundTransparency = 0.75,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, 0, 0, 36),
+                ZIndex = content.ZIndex + 1,
+                Parent = content,
+            })
+            Utility.Round(infoCard, 8)
+            Utility.Stroke(infoCard, T2.Accent, 1, 0.4)
+
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 12, 0, 0),
+                Size = UDim2.new(0.6, 0, 1, 0),
+                Text = hOpts.ScriptName or opts.Title or "TapherLib",
+                TextColor3 = T2.TextPrimary,
+                TextSize = 12,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = infoCard.ZIndex + 1,
+                Parent = infoCard,
+            })
+
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, -12, 0.5, 0),
+                Size = UDim2.new(0.35, 0, 0, 14),
+                Text = hOpts.ScriptVersion or "v1.0",
+                TextColor3 = T2.Accent,
+                TextSize = 11,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                ZIndex = infoCard.ZIndex + 1,
+                Parent = infoCard,
+            })
+        end
+
+        return homeTab
     end
 
     function Window:Destroy()
