@@ -33,10 +33,10 @@ Theme.Default = {
     Info              = Color3.fromRGB(96,  165, 250),
 
     -- Text
-    TextPrimary       = Color3.fromRGB(230, 235, 255),
-    TextSecondary     = Color3.fromRGB(140, 155, 210),
-    TextMuted         = Color3.fromRGB(75,  90,  145),
-    TextAccent        = Color3.fromRGB(80,  130, 255),
+    TextPrimary       = Color3.fromRGB(240, 240, 240),
+    TextSecondary     = Color3.fromRGB(216, 216, 216),
+    TextMuted         = Color3.fromRGB(160,  160,  160),
+    TextAccent        = Color3.fromRGB(250,  250, 250),
 
     -- Components
     ToggleOff         = Color3.fromRGB(30,  35,  70),
