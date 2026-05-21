@@ -48,8 +48,8 @@ function Components.CreateWindow(opts)
 
     local root = Utility.Create("Frame", {
         Name = "TapherWindow",
-        BackgroundColor3 = T.Surface,
-        BackgroundTransparency = T.GlassTransparency,
+        BackgroundColor3 = Color3.fromRGB(8, 8, 18),
+        BackgroundTransparency = 0.22,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -57,39 +57,37 @@ function Components.CreateWindow(opts)
         ZIndex = 2,
         Parent = screenGui,
     })
-    Utility.Round(root, 16)
-    -- White frosted border — key to iPhone glassmorphism
-    Utility.Stroke(root, Color3.new(1,1,1), 1, 0.78)
-    Utility.Shadow(root, 28, 0.55)
+    Utility.Round(root, 18)
+    -- Crisp white frosted border
+    Utility.Stroke(root, Color3.new(1,1,1), 1.5, 0.72)
+    Utility.Shadow(root, 32, 0.42)
 
-    -- Glass layer 1 — very subtle white inner top glow
-    local glassTop = Utility.Create("Frame", {
+    -- Glass noise overlay — top left bright, bottom right dark
+    local glassBase = Utility.Create("Frame", {
         BackgroundColor3 = Color3.new(1,1,1),
-        BackgroundTransparency = 0.94,
+        BackgroundTransparency = 0.91,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0.12, 0),
+        Size = UDim2.new(1,0,1,0),
         ZIndex = root.ZIndex,
         Parent = root,
     })
-    Utility.Round(glassTop, 16)
-
-    -- Glass layer 2 — diagonal shimmer stripe
-    local shimmer = Utility.Create("Frame", {
-        BackgroundTransparency = 0.96,
-        BackgroundColor3 = Color3.new(1,1,1),
-        BorderSizePixel = 0,
-        AnchorPoint = Vector2.new(0, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        Size = UDim2.new(0.6, 0, 1, 0),
-        ZIndex = root.ZIndex,
-        Parent = root,
-    })
-    Utility.Round(shimmer, 16)
-    Utility.Gradient(shimmer, {
-        ColorSequenceKeypoint.new(0,   Color3.new(1,1,1)),
-        ColorSequenceKeypoint.new(0.5, Color3.new(0.6,0.6,0.8)),
-        ColorSequenceKeypoint.new(1,   Color3.new(0,0,0)),
+    Utility.Round(glassBase, 18)
+    Utility.Gradient(glassBase, {
+        ColorSequenceKeypoint.new(0,   Color3.new(1,   1,   1)),
+        ColorSequenceKeypoint.new(0.45, Color3.new(0.5, 0.5, 0.7)),
+        ColorSequenceKeypoint.new(1,   Color3.new(0.05,0.05,0.12)),
     }, 135)
+
+    -- Bright top-edge specular line
+    local specular = Utility.Create("Frame", {
+        BackgroundColor3 = Color3.new(1,1,1),
+        BackgroundTransparency = 0.65,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0.7, 0, 0, 1),
+        Position = UDim2.new(0.15, 0, 0, 0),
+        ZIndex = root.ZIndex + 1,
+        Parent = root,
+    })
 
     -- Title bar
     local titleBar = Utility.Create("Frame", {
@@ -209,10 +207,10 @@ function Components.CreateWindow(opts)
     })
     Utility.Round(minBtn, 99)
 
-    -- Divider
+    -- Title divider — white frosted line
     Utility.Create("Frame", {
-        BackgroundColor3 = T.Border,
-        BackgroundTransparency = 0.4,
+        BackgroundColor3 = Color3.new(1,1,1),
+        BackgroundTransparency = 0.78,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 47),
         Size = UDim2.new(1, 0, 0, 1),
@@ -238,11 +236,11 @@ function Components.CreateWindow(opts)
         })
     end
 
-    -- Sidebar — icon only, narrow
+    -- Sidebar — pure glass, no dark background
     local sidebar = Utility.Create("Frame", {
         Name = "Sidebar",
-        BackgroundColor3 = T.Background,
-        BackgroundTransparency = 0.15,
+        BackgroundColor3 = Color3.new(1,1,1),
+        BackgroundTransparency = 0.94,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 48),
         Size = UDim2.new(0, sideW, 1, -48),
@@ -252,9 +250,10 @@ function Components.CreateWindow(opts)
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, 14)
     sidebarCorner.Parent = sidebar
+    -- Subtle white right divider
     Utility.Create("Frame", {
-        BackgroundColor3 = T.Border,
-        BackgroundTransparency = 0.55,
+        BackgroundColor3 = Color3.new(1,1,1),
+        BackgroundTransparency = 0.82,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(1, 0),
         Position = UDim2.new(1, 0, 0, 0),
@@ -294,16 +293,16 @@ function Components.CreateWindow(opts)
     if opts.SearchBar ~= false then
         searchBar = Utility.Create("Frame", {
             Name = "SearchBar",
-            BackgroundColor3 = T.InputBg,
-            BackgroundTransparency = 0.3,
+            BackgroundColor3 = Color3.new(1,1,1),
+            BackgroundTransparency = 0.88,
             BorderSizePixel = 0,
             Position = UDim2.new(0, 10, 0, 8),
             Size = UDim2.new(1, -20, 0, 28),
             ZIndex = root.ZIndex + 2,
             Parent = contentArea,
         })
-        Utility.Round(searchBar, 8)
-        Utility.Stroke(searchBar, T.Border, 1, 0.6)
+        Utility.Round(searchBar, 10)
+        Utility.Stroke(searchBar, Color3.new(1,1,1), 1, 0.72)
 
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1,
@@ -741,15 +740,15 @@ function Components.CreateWindow(opts)
             local T3 = Theme.Current
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = T3.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.88,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
                 Parent = content,
             })
-            Utility.Round(frame, 8)
-            Utility.Stroke(frame, T3.Border, 1, 0.65)
+            Utility.Round(frame, 10)
+            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.74)
 
             local btn = Utility.Create("TextButton", {
                 BackgroundTransparency = 1,
@@ -809,10 +808,10 @@ function Components.CreateWindow(opts)
             Utility.AddRipple(btn, T3.Accent)
 
             btn.MouseEnter:Connect(function()
-                Utility.Tween(frame, fast, { BackgroundColor3 = Theme.Current.SurfaceLighter, BackgroundTransparency = 0.2 })
+                Utility.Tween(frame, fast, { BackgroundColor3 = Color3.new(1,1,1), BackgroundTransparency = 0.76 })
             end)
             btn.MouseLeave:Connect(function()
-                Utility.Tween(frame, fast, { BackgroundColor3 = Theme.Current.SurfaceLight, BackgroundTransparency = 0.35 })
+                Utility.Tween(frame, fast, { BackgroundColor3 = Color3.new(1,1,1), BackgroundTransparency = 0.88 })
             end)
             btn.MouseButton1Click:Connect(function()
                 if bOpts.Callback then bOpts.Callback() end
@@ -829,15 +828,15 @@ function Components.CreateWindow(opts)
             local state = tOpts.Default or false
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = T3.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.88,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
                 Parent = content,
             })
-            Utility.Round(frame, 8)
-            Utility.Stroke(frame, T3.Border, 1, 0.65)
+            Utility.Round(frame, 10)
+            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.74)
 
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
@@ -855,7 +854,8 @@ function Components.CreateWindow(opts)
             -- Track
             local track = Utility.Create("Frame", {
                 Name = "ToggleTrack",
-                BackgroundColor3 = state and T3.Accent or T3.ToggleOff,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.78,
                 BorderSizePixel = 0,
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, -12, 0.5, 0),
@@ -887,7 +887,10 @@ function Components.CreateWindow(opts)
 
             local function setState(val)
                 state = val
-                Utility.Tween(track, fast, { BackgroundColor3 = state and T3.Accent or T3.ToggleOff })
+                Utility.Tween(track, fast, {
+                    BackgroundColor3 = state and T3.Accent or Color3.new(1,1,1),
+                    BackgroundTransparency = state and 0.1 or 0.78,
+                })
                 Utility.Tween(knob, fast, { Position = state and UDim2.new(0, 22, 0.5, 0) or UDim2.new(0, 2, 0.5, 0) })
                 if tOpts.Callback then tOpts.Callback(state) end
             end
@@ -918,15 +921,15 @@ function Components.CreateWindow(opts)
             local val  = sOpts.Default or min
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = T3.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.88,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 54),
                 ZIndex = content.ZIndex + 1,
                 Parent = content,
             })
-            Utility.Round(frame, 8)
-            Utility.Stroke(frame, T3.Border, 1, 0.65)
+            Utility.Round(frame, 10)
+            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.74)
 
             local nameLabel = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
@@ -956,10 +959,11 @@ function Components.CreateWindow(opts)
             })
 
             local track = Utility.Create("Frame", {
-                BackgroundColor3 = T3.SliderTrack,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.82,
                 BorderSizePixel = 0,
                 Position = UDim2.new(0, 14, 0, 32),
-                Size = UDim2.new(1, -28, 0, 6),
+                Size = UDim2.new(1, -28, 0, 5),
                 ZIndex = frame.ZIndex + 2,
                 Parent = frame,
             })
@@ -1107,10 +1111,10 @@ function Components.CreateWindow(opts)
 
             -- Dropdown list — parented to contentArea so ScrollingFrame doesn't clip it
             local listFrame = Utility.Create("ScrollingFrame", {
-                BackgroundColor3 = T3.Surface,
-                BackgroundTransparency = 0.05,
+                BackgroundColor3 = Color3.fromRGB(8, 8, 20),
+                BackgroundTransparency = 0.18,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0, 0, 0, 0), -- repositioned dynamically on open
+                Position = UDim2.new(0, 0, 0, 0),
                 Size = UDim2.new(0, 0, 0, 0),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 ScrollBarThickness = 2,
@@ -1119,8 +1123,8 @@ function Components.CreateWindow(opts)
                 ZIndex = 9000,
                 Parent = contentArea,
             })
-            Utility.Round(listFrame, 8)
-            Utility.Stroke(listFrame, T3.Border, 1, 0.4)
+            Utility.Round(listFrame, 10)
+            Utility.Stroke(listFrame, Color3.new(1,1,1), 1, 0.74)
             local listLayout = Utility.ListLayout(listFrame, Enum.FillDirection.Vertical, 2)
             Utility.Padding(listFrame, 4, 4, 4, 4)
 
@@ -1132,18 +1136,18 @@ function Components.CreateWindow(opts)
                 end
                 for _, opt in ipairs(options) do
                     local optBtn = Utility.Create("TextButton", {
-                        BackgroundColor3 = opt == selected and T3.Accent or T3.SurfaceLight,
-                        BackgroundTransparency = opt == selected and 0.3 or 0.5,
+                        BackgroundColor3 = opt == selected and T3.Accent or Color3.new(1,1,1),
+                        BackgroundTransparency = opt == selected and 0.25 or 0.90,
                         BorderSizePixel = 0,
                         Size = UDim2.new(1, 0, 0, 28),
                         Text = opt,
-                        TextColor3 = opt == selected and T3.TextPrimary or T3.TextSecondary,
+                        TextColor3 = opt == selected and Color3.new(1,1,1) or T3.TextSecondary,
                         TextSize = 11,
                         Font = Enum.Font.Gotham,
                         ZIndex = listFrame.ZIndex + 1,
                         Parent = listFrame,
                     })
-                    Utility.Round(optBtn, 6)
+                    Utility.Round(optBtn, 7)
                     optBtn.MouseButton1Click:Connect(function()
                         selected = opt
                         selLabel.Text = selected
@@ -1210,15 +1214,15 @@ function Components.CreateWindow(opts)
             local T3 = Theme.Current
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = T3.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.88,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 54),
                 ZIndex = content.ZIndex + 1,
                 Parent = content,
             })
-            Utility.Round(frame, 8)
-            Utility.Stroke(frame, T3.Border, 1, 0.65)
+            Utility.Round(frame, 10)
+            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.74)
 
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
@@ -1234,17 +1238,17 @@ function Components.CreateWindow(opts)
             })
 
             local inputBox = Utility.Create("Frame", {
-                BackgroundColor3 = T3.InputBg,
-                BackgroundTransparency = 0.2,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.84,
                 BorderSizePixel = 0,
                 Position = UDim2.new(0, 10, 0, 24),
                 Size = UDim2.new(1, -20, 0, 22),
                 ZIndex = frame.ZIndex + 2,
                 Parent = frame,
             })
-            Utility.Round(inputBox, 6)
+            Utility.Round(inputBox, 7)
 
-            local stroke = Utility.Stroke(inputBox, T3.Border, 1, 0.5)
+            local stroke = Utility.Stroke(inputBox, Color3.new(1,1,1), 1, 0.72)
 
             local textBox = Utility.Create("TextBox", {
                 BackgroundTransparency = 1,
@@ -1266,7 +1270,7 @@ function Components.CreateWindow(opts)
                 Utility.Tween(stroke, fast, { Color = T3.Accent, Transparency = 0 })
             end)
             textBox.FocusLost:Connect(function(enter)
-                Utility.Tween(stroke, fast, { Color = T3.Border, Transparency = 0.5 })
+                Utility.Tween(stroke, fast, { Color = Color3.new(1,1,1), Transparency = 0.72 })
                 if iOpts.Callback then iOpts.Callback(textBox.Text, enter) end
             end)
 
@@ -1290,16 +1294,16 @@ function Components.CreateWindow(opts)
             local open  = false
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = T3.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Color3.new(1,1,1),
+                BackgroundTransparency = 0.88,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
                 ClipsDescendants = false,
                 Parent = content,
             })
-            Utility.Round(frame, 8)
-            Utility.Stroke(frame, T3.Border, 1, 0.65)
+            Utility.Round(frame, 10)
+            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.74)
 
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
@@ -1323,13 +1327,13 @@ function Components.CreateWindow(opts)
                 ZIndex = frame.ZIndex + 2,
                 Parent = frame,
             })
-            Utility.Round(preview, 6)
-            Utility.Stroke(preview, T3.Border, 1, 0.4)
+            Utility.Round(preview, 7)
+            Utility.Stroke(preview, Color3.new(1,1,1), 1, 0.6)
 
-            -- Expanded picker panel — parented to contentArea to avoid clipping/overlap
+            -- Expanded picker panel — parented to contentArea
             local pickerPanel = Utility.Create("Frame", {
-                BackgroundColor3 = T3.Surface,
-                BackgroundTransparency = 0.05,
+                BackgroundColor3 = Color3.fromRGB(8, 8, 20),
+                BackgroundTransparency = 0.18,
                 BorderSizePixel = 0,
                 Position = UDim2.new(0, 0, 0, 0),
                 Size = UDim2.new(0, 0, 0, 0),
