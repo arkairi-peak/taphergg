@@ -1,102 +1,175 @@
 --[[
     TapherLib/Theme.lua
-    Premium obsidian glass palette — iPhone-quality frosted dark UI.
-    Deep blacks, crisp white borders at low opacity, electric violet accent.
+    Premium dark glass palette — deep, rich, moody.
 ]]
 
 local Theme = {}
 
--- ── Default: Deep Obsidian Glass ─────────────────────────────────────────────
 Theme.Default = {
-    -- Core backgrounds — near-black with a whisper of violet depth
-    Background        = Color3.fromRGB(5,    5,    9),
-    Surface           = Color3.fromRGB(11,   11,   19),
-    SurfaceLight      = Color3.fromRGB(19,   19,   32),
-    SurfaceLighter    = Color3.fromRGB(29,   29,   46),
-
-    -- Glass values
-    GlassTransparency = 0.38,   -- window pane opacity (lower = more opaque)
-    BlurSize          = 0,      -- no engine blur (glassmorphism from transparency)
-
-    -- Borders — pure white at very low opacity = frosted glass edge
+    Background        = Color3.fromRGB(5,    4,    12),
+    Surface           = Color3.fromRGB(10,   9,    22),
+    SurfaceLight      = Color3.fromRGB(18,   16,   36),
+    SurfaceLighter    = Color3.fromRGB(28,   25,   52),
+    GlassTransparency = 0.22,
+    BlurSize          = 0,
     Border            = Color3.fromRGB(255, 255, 255),
     BorderLight       = Color3.fromRGB(255, 255, 255),
-    BorderTransp      = 0.82,
-
-    -- Accent — premium electric violet (like iOS purple / Vision Pro)
-    Accent            = Color3.fromRGB(124, 95,  255),
-    AccentHover       = Color3.fromRGB(155, 128, 255),
-    AccentDim         = Color3.fromRGB(72,  52,  190),
-    AccentGlow        = Color3.fromRGB(124, 95,  255),
-
-    -- Status
+    BorderTransp      = 0.78,
+    Accent            = Color3.fromRGB(120, 88,  255),
+    AccentHover       = Color3.fromRGB(152, 122, 255),
+    AccentDim         = Color3.fromRGB(68,  46,  185),
+    AccentGlow        = Color3.fromRGB(120, 88,  255),
     Success           = Color3.fromRGB(48,  209, 148),
     Warning           = Color3.fromRGB(255, 185, 40),
-    Error             = Color3.fromRGB(255, 95,  95),
-    Info              = Color3.fromRGB(90,  160, 255),
-
-    -- Text — ultra crisp white hierarchy
+    Error             = Color3.fromRGB(255, 75,  75),
+    Info              = Color3.fromRGB(80,  150, 255),
     TextPrimary       = Color3.fromRGB(252, 252, 255),
-    TextSecondary     = Color3.fromRGB(165, 165, 200),
-    TextMuted         = Color3.fromRGB(75,  75,  108),
-    TextAccent        = Color3.fromRGB(155, 128, 255),
-
-    -- Component internals
-    ToggleOff         = Color3.fromRGB(20,  20,  34),
-    SliderTrack       = Color3.fromRGB(14,  14,  24),
-    TabInactive       = Color3.fromRGB(13,  13,  22),
-    InputBg           = Color3.fromRGB(7,   7,   13),
-
+    TextSecondary     = Color3.fromRGB(160, 160, 198),
+    TextMuted         = Color3.fromRGB(72,  72,  105),
+    TextAccent        = Color3.fromRGB(152, 122, 255),
+    ToggleOff         = Color3.fromRGB(18,  16,  36),
+    SliderTrack       = Color3.fromRGB(12,  11,  26),
+    TabInactive       = Color3.fromRGB(12,  11,  24),
+    InputBg           = Color3.fromRGB(6,   5,   14),
     Shadow            = Color3.fromRGB(0,   0,   0),
-    Glow              = Color3.fromRGB(124, 95,  255),
+    Glow              = Color3.fromRGB(120, 88,  255),
 }
 
 Theme.Current = {}
 for k, v in pairs(Theme.Default) do Theme.Current[k] = v end
 
--- ── Accent presets ────────────────────────────────────────────────────────────
+-- ── Accent presets — each has full background tinting built in ────────────────
+-- Format: accent colors + background tint (bg, surf, surfL, surfLighter)
 Theme.Presets = {
-    Violet  = { Accent = Color3.fromRGB(124, 95,  255), AccentHover = Color3.fromRGB(155, 128, 255), AccentDim = Color3.fromRGB(72,  52,  190), AccentGlow = Color3.fromRGB(124, 95,  255) },
-    Blue    = { Accent = Color3.fromRGB(55,  125, 255), AccentHover = Color3.fromRGB(90,  160, 255), AccentDim = Color3.fromRGB(28,  68,  170), AccentGlow = Color3.fromRGB(55,  125, 255) },
-    Cyan    = { Accent = Color3.fromRGB(2,   178, 214), AccentHover = Color3.fromRGB(30,  210, 240), AccentDim = Color3.fromRGB(5,   105, 140), AccentGlow = Color3.fromRGB(2,   178, 214) },
-    Pink    = { Accent = Color3.fromRGB(240, 68,  150), AccentHover = Color3.fromRGB(255, 115, 185), AccentDim = Color3.fromRGB(145, 36,  95),  AccentGlow = Color3.fromRGB(240, 68,  150) },
-    Green   = { Accent = Color3.fromRGB(12,  183, 125), AccentHover = Color3.fromRGB(48,  209, 155), AccentDim = Color3.fromRGB(8,   108, 76),  AccentGlow = Color3.fromRGB(12,  183, 125) },
-    Red     = { Accent = Color3.fromRGB(242, 62,  62),  AccentHover = Color3.fromRGB(255, 105, 105), AccentDim = Color3.fromRGB(145, 35,  35),  AccentGlow = Color3.fromRGB(242, 62,  62)  },
-    Orange  = { Accent = Color3.fromRGB(252, 110, 18),  AccentHover = Color3.fromRGB(255, 155, 65),  AccentDim = Color3.fromRGB(152, 62,  8),   AccentGlow = Color3.fromRGB(252, 110, 18)  },
-    Gold    = { Accent = Color3.fromRGB(238, 180, 8),   AccentHover = Color3.fromRGB(255, 222, 65),  AccentDim = Color3.fromRGB(145, 102, 4),   AccentGlow = Color3.fromRGB(238, 180, 8)   },
-    Rose    = { Accent = Color3.fromRGB(248, 58,  90),  AccentHover = Color3.fromRGB(255, 98,  128), AccentDim = Color3.fromRGB(152, 28,  52),   AccentGlow = Color3.fromRGB(248, 58,  90)  },
-    Silver  = { Accent = Color3.fromRGB(168, 168, 192), AccentHover = Color3.fromRGB(210, 210, 230), AccentDim = Color3.fromRGB(90,  90,  115),  AccentGlow = Color3.fromRGB(168, 168, 192) },
+    -- Deep violet — default premium
+    Purple = {
+        Accent = Color3.fromRGB(120, 88,  255),
+        AccentHover = Color3.fromRGB(152, 122, 255),
+        AccentDim   = Color3.fromRGB(68,  46,  185),
+        AccentGlow  = Color3.fromRGB(120, 88,  255),
+        Background     = Color3.fromRGB(5,   4,   12),
+        Surface        = Color3.fromRGB(10,  9,   22),
+        SurfaceLight   = Color3.fromRGB(18,  16,  36),
+        SurfaceLighter = Color3.fromRGB(28,  25,  52),
+    },
+    -- Deep navy — rich dark blue, not bright
+    Blue = {
+        Accent = Color3.fromRGB(48,  105, 230),
+        AccentHover = Color3.fromRGB(82,  138, 255),
+        AccentDim   = Color3.fromRGB(24,  58,  155),
+        AccentGlow  = Color3.fromRGB(48,  105, 230),
+        Background     = Color3.fromRGB(3,   6,   18),
+        Surface        = Color3.fromRGB(6,   11,  30),
+        SurfaceLight   = Color3.fromRGB(10,  18,  48),
+        SurfaceLighter = Color3.fromRGB(16,  26,  65),
+    },
+    -- Electric cyan — deep ocean
+    Cyan = {
+        Accent = Color3.fromRGB(0,   168, 208),
+        AccentHover = Color3.fromRGB(30,  200, 235),
+        AccentDim   = Color3.fromRGB(0,   95,  130),
+        AccentGlow  = Color3.fromRGB(0,   168, 208),
+        Background     = Color3.fromRGB(2,   8,   14),
+        Surface        = Color3.fromRGB(4,   14,  22),
+        SurfaceLight   = Color3.fromRGB(6,   22,  34),
+        SurfaceLighter = Color3.fromRGB(9,   32,  48),
+    },
+    -- Hot pink — deep magenta
+    Pink = {
+        Accent = Color3.fromRGB(225, 48,  148),
+        AccentHover = Color3.fromRGB(250, 90,  180),
+        AccentDim   = Color3.fromRGB(135, 22,  85),
+        AccentGlow  = Color3.fromRGB(225, 48,  148),
+        Background     = Color3.fromRGB(14,  3,   10),
+        Surface        = Color3.fromRGB(22,  6,   16),
+        SurfaceLight   = Color3.fromRGB(35,  9,   26),
+        SurfaceLighter = Color3.fromRGB(48,  13,  36),
+    },
+    -- Forest green — deep emerald
+    Green = {
+        Accent = Color3.fromRGB(10,  178, 118),
+        AccentHover = Color3.fromRGB(45,  210, 152),
+        AccentDim   = Color3.fromRGB(5,   102, 68),
+        AccentGlow  = Color3.fromRGB(10,  178, 118),
+        Background     = Color3.fromRGB(2,   10,  7),
+        Surface        = Color3.fromRGB(4,   16,  11),
+        SurfaceLight   = Color3.fromRGB(6,   26,  18),
+        SurfaceLighter = Color3.fromRGB(9,   36,  25),
+    },
+    -- Crimson — deep dark red, not bright
+    Red = {
+        Accent = Color3.fromRGB(195, 38,  38),
+        AccentHover = Color3.fromRGB(230, 72,  72),
+        AccentDim   = Color3.fromRGB(115, 18,  18),
+        AccentGlow  = Color3.fromRGB(195, 38,  38),
+        Background     = Color3.fromRGB(14,  2,   2),
+        Surface        = Color3.fromRGB(22,  4,   4),
+        SurfaceLight   = Color3.fromRGB(36,  7,   7),
+        SurfaceLighter = Color3.fromRGB(50,  10,  10),
+    },
+    -- Molten orange
+    Orange = {
+        Accent = Color3.fromRGB(235, 98,  10),
+        AccentHover = Color3.fromRGB(255, 138, 50),
+        AccentDim   = Color3.fromRGB(140, 55,  5),
+        AccentGlow  = Color3.fromRGB(235, 98,  10),
+        Background     = Color3.fromRGB(14,  6,   1),
+        Surface        = Color3.fromRGB(22,  9,   2),
+        SurfaceLight   = Color3.fromRGB(36,  14,  3),
+        SurfaceLighter = Color3.fromRGB(50,  20,  5),
+    },
+    -- Liquid gold
+    Gold = {
+        Accent = Color3.fromRGB(212, 165, 5),
+        AccentHover = Color3.fromRGB(245, 205, 50),
+        AccentDim   = Color3.fromRGB(125, 95,  3),
+        AccentGlow  = Color3.fromRGB(212, 165, 5),
+        Background     = Color3.fromRGB(12,  9,   1),
+        Surface        = Color3.fromRGB(18,  14,  2),
+        SurfaceLight   = Color3.fromRGB(28,  22,  3),
+        SurfaceLighter = Color3.fromRGB(40,  30,  5),
+    },
 }
 
--- ── SetAccent — also tints all background/surface layers to match hue ─────────
+-- ── SetAccent ─────────────────────────────────────────────────────────────────
 function Theme.SetAccent(accentOrPreset)
+    -- Always reset to default first so switching back to Purple works cleanly
+    for k, v in pairs(Theme.Default) do
+        Theme.Current[k] = v
+    end
+
     local preset
     if type(accentOrPreset) == "string" then
         preset = Theme.Presets[accentOrPreset]
+        -- Try Purple alias
+        if not preset and accentOrPreset == "Violet" then
+            preset = Theme.Presets["Purple"]
+        end
     elseif typeof(accentOrPreset) == "Color3" then
-        local h, s, v = Color3.toHSV(accentOrPreset)
+        local h, s, v2 = Color3.toHSV(accentOrPreset)
         preset = {
             Accent      = accentOrPreset,
-            AccentHover = Color3.fromHSV(h, math.max(0, s - 0.14), math.min(1, v + 0.14)),
-            AccentDim   = Color3.fromHSV(h, s, math.max(0, v - 0.26)),
+            AccentHover = Color3.fromHSV(h, math.max(0, s - 0.12), math.min(1, v2 + 0.12)),
+            AccentDim   = Color3.fromHSV(h, s, math.max(0, v2 - 0.25)),
             AccentGlow  = accentOrPreset,
+            Background     = Color3.fromHSV(h, math.min(s * 0.65, 0.48), 0.038),
+            Surface        = Color3.fromHSV(h, math.min(s * 0.55, 0.42), 0.068),
+            SurfaceLight   = Color3.fromHSV(h, math.min(s * 0.45, 0.36), 0.105),
+            SurfaceLighter = Color3.fromHSV(h, math.min(s * 0.36, 0.30), 0.155),
         }
     end
+
     if preset then
-        for k, v in pairs(preset) do Theme.Current[k] = v end
-        local acc     = Theme.Current.Accent
-        local h, s, _ = Color3.toHSV(acc)
-        -- Keep saturation very low so backgrounds stay near-black, just hue-tinted
-        Theme.Current.Background     = Color3.fromHSV(h, math.min(s * 0.60, 0.45), 0.035)
-        Theme.Current.Surface        = Color3.fromHSV(h, math.min(s * 0.50, 0.40), 0.065)
-        Theme.Current.SurfaceLight   = Color3.fromHSV(h, math.min(s * 0.42, 0.35), 0.10)
-        Theme.Current.SurfaceLighter = Color3.fromHSV(h, math.min(s * 0.34, 0.30), 0.15)
-        Theme.Current.SliderTrack    = Color3.fromHSV(h, math.min(s * 0.42, 0.35), 0.075)
-        Theme.Current.TabInactive    = Color3.fromHSV(h, math.min(s * 0.42, 0.35), 0.065)
-        Theme.Current.InputBg        = Color3.fromHSV(h, math.min(s * 0.52, 0.42), 0.032)
-        Theme.Current.ToggleOff      = Color3.fromHSV(h, math.min(s * 0.32, 0.28), 0.09)
-        Theme.Current.TextAccent     = Theme.Current.AccentHover
-        Theme.Current.Glow           = acc
+        for k, v in pairs(preset) do
+            Theme.Current[k] = v
+        end
+        -- Derived values
+        Theme.Current.TextAccent  = Theme.Current.AccentHover
+        Theme.Current.Glow        = Theme.Current.Accent
+        -- Keep text colors consistent regardless of theme
+        Theme.Current.TextPrimary   = Color3.fromRGB(252, 252, 255)
+        Theme.Current.TextSecondary = Color3.fromRGB(160, 160, 198)
+        Theme.Current.TextMuted     = Color3.fromRGB(72,  72,  105)
     end
 end
 
