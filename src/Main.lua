@@ -83,7 +83,7 @@
 
 -- ── Module paths (update BASE_URL before hosting) ───────────────────────────
 local BASE_URL = "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
-
+ 
 local function req(path)
     local url = BASE_URL .. "/" .. path
     local ok, result = pcall(function()
@@ -102,57 +102,57 @@ local function req(path)
     end
     error("[TapherLib] Failed to load " .. path .. "\nURL: " .. url .. "\nError: " .. tostring(result))
 end
-
+ 
 -- ── Load modules ────────────────────────────────────────────────────────────
 local Theme         = req("Theme.lua")
 local Utility       = req("Utility.lua")
 local Config        = req("Config.lua")
 local Components    = req("Components.lua")
 local Notifications = req("Notifications.lua")
-
+ 
 -- Inject cross-dependencies
 Components._init(Theme, Utility, Config)
 Notifications._init(Theme, Utility)
-
+ 
 -- ── TapherLib public API ─────────────────────────────────────────────────────
 local TapherLib = {}
 TapherLib.__index = TapherLib
-
+ 
 local openWindows = {}
-
+ 
 -- Create a new window
 function TapherLib:CreateWindow(opts)
     local win = Components.CreateWindow(opts)
     table.insert(openWindows, win)
     return win
 end
-
+ 
 -- Send a notification
 function TapherLib:Notify(opts)
     return Notifications.Send(opts)
 end
-
+ 
 -- Shorthand notifications
 function TapherLib:NotifySuccess(title, desc, style)
     return Notifications.Success(title, desc, style)
 end
-
+ 
 function TapherLib:NotifyError(title, desc, style)
     return Notifications.Error(title, desc, style)
 end
-
+ 
 function TapherLib:NotifyWarning(title, desc, style)
     return Notifications.Warning(title, desc, style)
 end
-
+ 
 function TapherLib:NotifyInfo(title, desc, style)
     return Notifications.Info(title, desc, style)
 end
-
+ 
 function TapherLib:NotifyTyping(title, desc)
     return Notifications.Typing(title, desc)
 end
-
+ 
 -- Change accent color at runtime — updates Theme AND recolors all open windows
 function TapherLib:SetAccent(accentOrPreset)
     Theme.SetAccent(accentOrPreset)
@@ -168,36 +168,37 @@ function TapherLib:SetAccent(accentOrPreset)
         if win.RefreshAccent then win:RefreshAccent() end
     end
 end
-
+ 
 -- Wire up accent restore on config load
 Config._onAccentLoad = function(accentOrPreset)
     TapherLib:SetAccent(accentOrPreset)
 end
-
+ 
 -- Override any individual theme value
 function TapherLib:SetTheme(key, value)
     Theme.Set(key, value)
 end
-
+ 
 -- Save all registered flags to a profile
 function TapherLib:SaveConfig(profileName)
     return Config.SaveAll(profileName)
 end
-
+ 
 -- Load all registered flags from a profile
 function TapherLib:LoadConfig(profileName)
     return Config.LoadAll(profileName)
 end
-
+ 
 -- Expose submodules for advanced usage
 TapherLib.Theme         = Theme
 TapherLib.Utility       = Utility
 TapherLib.Config        = Config
 TapherLib.Notifications = Notifications
-
+ 
 -- Version info
 TapherLib.Version = "1.0.0"
-
+ 
 print("[TapherLib] v" .. TapherLib.Version .. " loaded successfully.")
-
+ 
 return TapherLib
+
