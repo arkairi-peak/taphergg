@@ -442,40 +442,31 @@ function Components.CreateWindow(opts)
         minimised = state
         if minimised then
             if minimiseMode == "Float" then
-                -- Fade + shrink sidebar and content first, then window
-                if searchBar then
-                    Utility.Tween(searchBar, fast, { BackgroundTransparency = 1 })
-                end
-                Utility.Tween(sidebar, fast, { BackgroundTransparency = 1 })
-                Utility.Tween(contentArea, fast, { BackgroundTransparency = 1 })
-                -- Smooth scale down
-                Utility.Tween(root, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-                    Size = UDim2.new(0, winW * 0.85, 0, winH * 0.85),
-                    BackgroundTransparency = 0.6,
+                if searchBar then searchBar.Visible = false end
+                -- Scale down only — no transparency change avoids white flash
+                Utility.Tween(root, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, winW * 0.88, 0, winH * 0.88),
                 }, function()
-                    Utility.Tween(root, fast, { Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1 }, function()
+                    Utility.Tween(root, TweenInfo.new(0.14, Enum.EasingStyle.Quad), {
+                        Size = UDim2.new(0, 0, 0, 0),
+                    }, function()
                         root.Visible = false
                     end)
                 end)
             else
                 if searchBar then searchBar.Visible = false end
-                Utility.Tween(root, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Size = miniSize })
+                Utility.Tween(root, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Size = miniSize })
             end
         else
             if minimiseMode == "Float" then
                 root.Visible = true
-                root.Size = UDim2.new(0, winW * 0.8, 0, winH * 0.8)
-                root.BackgroundTransparency = 0.7
-                -- Restore sidebar/content visibility
-                Utility.Tween(sidebar, med, { BackgroundTransparency = 0.15 })
-                if searchBar then
-                    Utility.Tween(searchBar, med, { BackgroundTransparency = 0.3 })
-                end
-                -- Spring open
-                Utility.Tween(root, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                root.Size = UDim2.new(0, winW * 0.88, 0, winH * 0.88)
+                -- Spring open — size only, no transparency
+                Utility.Tween(root, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Size = fullSize,
-                    BackgroundTransparency = T.GlassTransparency,
-                })
+                }, function()
+                    if searchBar then searchBar.Visible = true end
+                end)
             else
                 Utility.Tween(root, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = fullSize }, function()
                     if searchBar then searchBar.Visible = true end
@@ -485,7 +476,7 @@ function Components.CreateWindow(opts)
     end
 
     closeBtn.MouseButton1Click:Connect(function()
-        Utility.Tween(root, med, { Size = UDim2.new(0, winW, 0, 0), BackgroundTransparency = 1 }, function()
+        Utility.Tween(root, med, { Size = UDim2.new(0, 0, 0, 0) }, function()
             screenGui:Destroy()
         end)
     end)
@@ -509,18 +500,14 @@ function Components.CreateWindow(opts)
         end)
     end
 
-    -- Float button always visible from start in Float mode, acts as toggle
+    -- Float button always visible from start in Float mode
     if minimiseMode == "Float" then
         floatBtn.Visible = true
     end
 
-    -- Entrance animation — NO blur (glassmorphism is from window transparency alone)
-    root.Size = UDim2.new(0, winW, 0, 0)
-    root.BackgroundTransparency = 1
-    Utility.Tween(root, slow, {
-        Size = fullSize,
-        BackgroundTransparency = T.GlassTransparency,
-    })
+    -- Entrance animation — size only, no transparency tween (avoids white flash)
+    root.Size = UDim2.new(0, winW * 0.85, 0, winH * 0.85)
+    Utility.Tween(root, slow, { Size = fullSize })
 
     -- ── Tab system ────────────────────────────────────────────────────────────
     local tabs = {}
@@ -1547,34 +1534,35 @@ function Components.CreateWindow(opts)
     function Window:RefreshAccent()
         local T2 = Theme.Current
 
-        -- Root window
-        Utility.Tween(root, med, { BackgroundColor3 = T2.Surface })
+        -- Root window — keep it dark, just update accent glow via border stroke
         local rootStroke = root:FindFirstChildWhichIsA("UIStroke")
         if rootStroke then
-            Utility.Tween(rootStroke, fast, { Color = T2.Border })
+            rootStroke.Color = Color3.new(1,1,1)
         end
 
-        -- Glass layers
-        glassTop.BackgroundColor3 = Color3.new(1,1,1)
-        shimmer.BackgroundColor3  = Color3.new(1,1,1)
+        -- Sidebar stays white glass always
+        sidebar.BackgroundColor3   = Color3.new(1,1,1)
+        sidebar.BackgroundTransparency = 0.94
 
-        -- Sidebar
-        Utility.Tween(sidebar, med, { BackgroundColor3 = T2.Background })
+        -- Drag handle stays glass
+        dragHandle.BackgroundColor3 = Color3.new(1,1,1)
+        dragHandle.BackgroundTransparency = 0.88
 
-        -- Drag handle
-        Utility.Tween(dragHandle, med, { BackgroundColor3 = T2.SurfaceLight })
-
-        -- Logo box
+        -- Logo box — accent color
         Utility.Tween(logoBox, fast, { BackgroundColor3 = T2.Accent })
 
-        -- Float button
+        -- Float button — accent color
         Utility.Tween(floatBtn, fast, { BackgroundColor3 = T2.Accent })
 
-        -- Search bar
+        -- Search bar — stays white glass
         if searchBar then
-            Utility.Tween(searchBar, med, { BackgroundColor3 = T2.InputBg })
+            searchBar.BackgroundColor3 = Color3.new(1,1,1)
+            searchBar.BackgroundTransparency = 0.88
             local sbStroke = searchBar:FindFirstChildWhichIsA("UIStroke")
-            if sbStroke then sbStroke.Color = T2.Border end
+            if sbStroke then
+                sbStroke.Color = Color3.new(1,1,1)
+                sbStroke.Transparency = 0.72
+            end
         end
 
         -- All tabs
@@ -1583,48 +1571,47 @@ function Components.CreateWindow(opts)
             Utility.Tween(tab.indicator, fast, { BackgroundColor3 = T2.Accent })
 
             if tab == activeTab then
-                Utility.Tween(tab.btn, fast, { BackgroundColor3 = T2.Accent })
+                Utility.Tween(tab.btn, fast, {
+                    BackgroundColor3 = T2.Accent,
+                    BackgroundTransparency = 0.15,
+                })
             else
-                Utility.Tween(tab.btn, fast, { BackgroundColor3 = T2.TabInactive })
+                Utility.Tween(tab.btn, fast, {
+                    BackgroundColor3 = Color3.new(1,1,1),
+                    BackgroundTransparency = 0.90,
+                })
             end
 
-            -- Recolor all elements inside content immediately
+            -- Recolor accent-specific elements inside content
             local function recolorDescendants(parent)
                 for _, child in ipairs(parent:GetChildren()) do
                     local n = child.Name
 
+                    -- Toggle track: white=off, accent=on
                     if n == "ToggleTrack" and child:IsA("Frame") then
-                        -- Detect on/off by comparing to known off colors
-                        local r,g,b = child.BackgroundColor3.R, child.BackgroundColor3.G, child.BackgroundColor3.B
-                        local isOff = (r < 0.2 and g < 0.2 and b < 0.35)
-                        Utility.Tween(child, fast, { BackgroundColor3 = isOff and T2.ToggleOff or T2.Accent })
+                        local isOff = child.BackgroundColor3 == Color3.new(1,1,1)
+                            or child.BackgroundTransparency > 0.5
+                        if not isOff then
+                            Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent, BackgroundTransparency = 0.1 })
+                        end
 
+                    -- Slider fills
                     elseif n == "SliderFill" and child:IsA("Frame") then
                         Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
 
+                    -- Slider thumb stroke
                     elseif n == "SliderThumb" and child:IsA("Frame") then
                         local st = child:FindFirstChildWhichIsA("UIStroke")
                         if st then st.Color = T2.Accent end
 
-                    elseif child:IsA("Frame") and child.BackgroundTransparency < 0.9 then
-                        -- Recolor all visible surface frames
-                        local r,g,b = child.BackgroundColor3.R, child.BackgroundColor3.G, child.BackgroundColor3.B
-                        local brightness = (r + g + b) / 3
-                        if brightness > 0.04 and brightness < 0.25 then
-                            -- Determine which surface level it is by brightness
-                            if brightness < 0.09 then
-                                Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLight })
-                            elseif brightness < 0.16 then
-                                Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLight })
-                            else
-                                Utility.Tween(child, med, { BackgroundColor3 = T2.SurfaceLighter })
-                            end
-                        end
-                        -- Recolor UIStroke borders inside
-                        local st = child:FindFirstChildWhichIsA("UIStroke")
-                        if st and st.Color ~= Color3.new(1,1,1) then
-                            st.Color = T2.Border
-                        end
+                    -- Value labels (accent colored text)
+                    elseif child:IsA("TextLabel") and child.TextColor3 ~= T2.TextPrimary
+                        and child.TextColor3 ~= T2.TextMuted
+                        and child.TextColor3 ~= T2.TextSecondary
+                        and child.TextColor3 ~= Color3.new(1,1,1)
+                        and child.TextColor3 ~= Color3.fromRGB(252,252,255) then
+                        -- Likely an accent-colored value label
+                        child.TextColor3 = T2.Accent
                     end
 
                     recolorDescendants(child)
