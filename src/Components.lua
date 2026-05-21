@@ -1534,11 +1534,10 @@ function Components.CreateWindow(opts)
     function Window:RefreshAccent()
         local T2 = Theme.Current
 
-        -- Root window — keep it dark, just update accent glow via border stroke
+        -- Root window background — tint to match theme
+        Utility.Tween(root, med, { BackgroundColor3 = T2.Background })
         local rootStroke = root:FindFirstChildWhichIsA("UIStroke")
-        if rootStroke then
-            rootStroke.Color = Color3.new(1,1,1)
-        end
+        if rootStroke then rootStroke.Color = Color3.new(1,1,1) end
 
         -- Sidebar stays white glass always
         sidebar.BackgroundColor3   = Color3.new(1,1,1)
@@ -1581,6 +1580,18 @@ function Components.CreateWindow(opts)
                     BackgroundTransparency = 0.90,
                 })
             end
+
+        -- Process home tab accent refs if any
+        if tab._accentRefs then
+            for _, ref in ipairs(tab._accentRefs) do
+                if ref.inst and ref.inst.Parent then
+                    local newVal = T2[ref.key]
+                    if newVal then
+                        Utility.Tween(ref.inst, fast, { [ref.prop] = newVal })
+                    end
+                end
+            end
+        end
 
             -- Recolor accent-specific elements inside content
             local function recolorDescendants(parent)
@@ -1631,17 +1642,20 @@ function Components.CreateWindow(opts)
         local homeTab = self:AddTab({ Name = hOpts.TabName or "Home", Icon = hOpts.TabIcon or "⌂" })
         local content = homeTab._content
 
+        -- Track accent elements for live recolor
+        local homeAccentRefs = {}
+
         -- ── Player header card ───────────────────────────────────────────────
         local headerCard = Utility.Create("Frame", {
-            BackgroundColor3 = T2.SurfaceLight,
-            BackgroundTransparency = 0.18,
+            BackgroundColor3 = Color3.new(1,1,1),
+            BackgroundTransparency = 0.88,
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 0, 70),
             ZIndex = content.ZIndex + 1,
             Parent = content,
         })
         Utility.Round(headerCard, 14)
-        Utility.Stroke(headerCard, Color3.new(1,1,1), 1, 0.84)
+        Utility.Stroke(headerCard, Color3.new(1,1,1), 1, 0.74)
 
         -- Top glass highlight strip
         local hGlass = Utility.Create("Frame", {
@@ -1654,10 +1668,10 @@ function Components.CreateWindow(opts)
         })
         Utility.Round(hGlass, 14)
 
-        -- Accent gradient left edge
+        -- Accent left edge bar
         local accentBar = Utility.Create("Frame", {
             BackgroundColor3 = T2.Accent,
-            BackgroundTransparency = 0.3,
+            BackgroundTransparency = 0.25,
             BorderSizePixel = 0,
             Size = UDim2.new(0, 3, 0.65, 0),
             Position = UDim2.new(0, 0, 0.175, 0),
@@ -1665,11 +1679,12 @@ function Components.CreateWindow(opts)
             Parent = headerCard,
         })
         Utility.Round(accentBar, 99)
+        table.insert(homeAccentRefs, { inst = accentBar, prop = "BackgroundColor3", key = "Accent" })
 
         -- Avatar with accent ring
         local avatarRing = Utility.Create("Frame", {
             BackgroundColor3 = T2.Accent,
-            BackgroundTransparency = 0.4,
+            BackgroundTransparency = 0.35,
             BorderSizePixel = 0,
             Position = UDim2.new(0, 14, 0.5, 0),
             AnchorPoint = Vector2.new(0, 0.5),
@@ -1678,6 +1693,7 @@ function Components.CreateWindow(opts)
             Parent = headerCard,
         })
         Utility.Round(avatarRing, 99)
+        table.insert(homeAccentRefs, { inst = avatarRing, prop = "BackgroundColor3", key = "Accent" })
 
         local avatarImg = Utility.Create("ImageLabel", {
             BackgroundTransparency = 1,
@@ -1732,8 +1748,12 @@ function Components.CreateWindow(opts)
             })
             Utility.Round(badge, 99)
             Utility.Stroke(badge, T2.Accent, 1, 0.55)
-            -- Subtle inner glow
-            Utility.Create("Frame", {
+            table.insert(homeAccentRefs, { inst = badge, prop = "BackgroundColor3", key = "Accent" })
+            local bStroke = badge:FindFirstChildWhichIsA("UIStroke")
+            if bStroke then
+                table.insert(homeAccentRefs, { inst = bStroke, prop = "Color", key = "Accent" })
+            end
+            local badgeInner = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.new(1,1,1),
                 BackgroundTransparency = 0.88,
                 BorderSizePixel = 0,
@@ -1741,7 +1761,7 @@ function Components.CreateWindow(opts)
                 ZIndex = badge.ZIndex,
                 Parent = badge,
             })
-            Utility.Round(badge:FindFirstChildWhichIsA("Frame"), 99)
+            Utility.Round(badgeInner, 99)
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1,0,1,0),
@@ -1799,6 +1819,7 @@ function Components.CreateWindow(opts)
             Parent = execCard,
         })
         Utility.Round(execDot, 99)
+        table.insert(homeAccentRefs, { inst = execDot, prop = "BackgroundColor3", key = "Accent" })
 
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1,
@@ -1995,16 +2016,19 @@ function Components.CreateWindow(opts)
                 BackgroundColor3 = T2.Accent,
                 BackgroundTransparency = 0.72,
                 BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 38),
+                Size = UDim2.new(1, 0, 0, 44),
                 ZIndex = content.ZIndex + 1,
                 Parent = content,
             })
             Utility.Round(infoCard, 10)
-            Utility.Stroke(infoCard, T2.Accent, 1, 0.5)
-            -- Inner glass
+            local infoStroke = Utility.Stroke(infoCard, T2.Accent, 1, 0.5)
+            table.insert(homeAccentRefs, { inst = infoCard,   prop = "BackgroundColor3", key = "Accent" })
+            table.insert(homeAccentRefs, { inst = infoStroke, prop = "Color",            key = "Accent" })
+
+            -- Inner glass sheen
             local iGlass = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.new(1,1,1),
-                BackgroundTransparency = 0.9,
+                BackgroundTransparency = 0.90,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1,0,0.5,0),
                 ZIndex = infoCard.ZIndex,
@@ -2012,23 +2036,61 @@ function Components.CreateWindow(opts)
             })
             Utility.Round(iGlass, 10)
 
+            local iconStartX = 14
+
+            -- Optional icon (emoji text OR rbxassetid)
+            if hOpts.ScriptIcon then
+                local isAsset = tostring(hOpts.ScriptIcon):find("rbxassetid") or tostring(hOpts.ScriptIcon):match("^%d+$")
+                if isAsset then
+                    local id = tostring(hOpts.ScriptIcon):match("%d+") or hOpts.ScriptIcon
+                    local iconImg = Utility.Create("ImageLabel", {
+                        BackgroundTransparency = 1,
+                        AnchorPoint = Vector2.new(0, 0.5),
+                        Position = UDim2.new(0, 10, 0.5, 0),
+                        Size = UDim2.new(0, 26, 0, 26),
+                        Image = "rbxassetid://" .. id,
+                        ScaleType = Enum.ScaleType.Fit,
+                        ZIndex = infoCard.ZIndex + 1,
+                        Parent = infoCard,
+                    })
+                    Utility.Round(iconImg, 6)
+                    iconStartX = 44
+                else
+                    Utility.Create("TextLabel", {
+                        BackgroundTransparency = 1,
+                        AnchorPoint = Vector2.new(0, 0.5),
+                        Position = UDim2.new(0, 10, 0.5, 0),
+                        Size = UDim2.new(0, 24, 0, 24),
+                        Text = hOpts.ScriptIcon,
+                        TextScaled = true,
+                        Font = Enum.Font.GothamBold,
+                        TextColor3 = Color3.new(1,1,1),
+                        ZIndex = infoCard.ZIndex + 1,
+                        Parent = infoCard,
+                    })
+                    iconStartX = 40
+                end
+            end
+
             Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 14, 0, 0),
-                Size = UDim2.new(0.6, 0, 1, 0),
+                Position = UDim2.new(0, iconStartX, 0, 0),
+                Size = UDim2.new(0.55, 0, 1, 0),
                 Text = hOpts.ScriptName or opts.Title or "TapherLib",
                 TextColor3 = Color3.fromRGB(252, 252, 255),
                 TextSize = 13,
                 Font = Enum.Font.GothamBold,
                 TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd,
                 ZIndex = infoCard.ZIndex + 1,
                 Parent = infoCard,
             })
-            Utility.Create("TextLabel", {
+
+            local verLabel = Utility.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, -14, 0.5, 0),
-                Size = UDim2.new(0.35, 0, 0, 16),
+                Size = UDim2.new(0.3, 0, 0, 16),
                 Text = hOpts.ScriptVersion or "v1.0",
                 TextColor3 = T2.AccentHover,
                 TextSize = 11,
@@ -2037,7 +2099,11 @@ function Components.CreateWindow(opts)
                 ZIndex = infoCard.ZIndex + 1,
                 Parent = infoCard,
             })
+            table.insert(homeAccentRefs, { inst = verLabel, prop = "TextColor3", key = "AccentHover" })
         end
+
+        -- Expose refs so RefreshAccent can update home cards
+        homeTab._accentRefs = homeAccentRefs
 
         return homeTab
     end
