@@ -563,8 +563,8 @@ function Components.CreateWindow(opts)
         -- Sidebar button — icon only, square
         local tabBtn = Utility.Create("TextButton", {
             Name = tabName,
-            BackgroundColor3 = T2.TabInactive,
-            BackgroundTransparency = 0.4,
+            BackgroundColor3 = Color3.new(1,1,1),
+            BackgroundTransparency = 0.92,
             BorderSizePixel = 0,
             Size = UDim2.new(1, -10, 0, 38),
             Text = "",
@@ -680,7 +680,7 @@ function Components.CreateWindow(opts)
             content.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 16)
         end)
 
-        local tab = { btn = tabBtn, content = content, indicator = indicator, components = {} }
+        local tab = { btn = tabBtn, content = content, indicator = indicator, components = {}, dropdownRefs = {} }
         table.insert(tabs, tab)
 
         -- Activate on click
@@ -1101,14 +1101,14 @@ function Components.CreateWindow(opts)
 
             -- Dropdown list — parented to contentArea so ScrollingFrame doesn't clip it
             local listFrame = Utility.Create("ScrollingFrame", {
-                BackgroundColor3 = Color3.fromRGB(8, 8, 20),
-                BackgroundTransparency = 0.18,
+                BackgroundColor3 = Color3.fromRGB(6, 5, 16),
+                BackgroundTransparency = 0.12,
                 BorderSizePixel = 0,
                 Position = UDim2.new(0, 0, 0, 0),
                 Size = UDim2.new(0, 0, 0, 0),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 ScrollBarThickness = 2,
-                ScrollBarImageColor3 = T3.Accent,
+                ScrollBarImageColor3 = Theme.Current.Accent,
                 Visible = false,
                 ZIndex = 9000,
                 Parent = contentArea,
@@ -1121,17 +1121,21 @@ function Components.CreateWindow(opts)
             local listTargetH = math.min(#options * 30 + 8, 150)
 
             local function populateList()
+                local TC = Theme.Current  -- always fresh
                 for _, child in ipairs(listFrame:GetChildren()) do
                     if child:IsA("TextButton") then child:Destroy() end
                 end
+                -- Update listFrame background to match current theme
+                listFrame.BackgroundColor3 = TC.Background
+                listFrame.ScrollBarImageColor3 = TC.Accent
                 for _, opt in ipairs(options) do
                     local optBtn = Utility.Create("TextButton", {
-                        BackgroundColor3 = opt == selected and T3.Accent or Color3.new(1,1,1),
-                        BackgroundTransparency = opt == selected and 0.25 or 0.90,
+                        BackgroundColor3 = opt == selected and TC.Accent or Color3.new(1,1,1),
+                        BackgroundTransparency = opt == selected and 0.15 or 0.92,
                         BorderSizePixel = 0,
                         Size = UDim2.new(1, 0, 0, 28),
                         Text = opt,
-                        TextColor3 = opt == selected and Color3.new(1,1,1) or T3.TextSecondary,
+                        TextColor3 = opt == selected and Color3.new(1,1,1) or TC.TextSecondary,
                         TextSize = 11,
                         Font = Enum.Font.Gotham,
                         ZIndex = listFrame.ZIndex + 1,
@@ -1190,6 +1194,8 @@ function Components.CreateWindow(opts)
             end
 
             table.insert(tab.components, { frame = frame, label = dOpts.Name or "" })
+            -- Register for live accent refresh
+            table.insert(tab.dropdownRefs, { listFrame = listFrame, repopulate = populateList })
 
             local obj = {}
             function obj:Get() return selected end
@@ -1537,41 +1543,26 @@ function Components.CreateWindow(opts)
     function Window:RefreshAccent()
         local T2 = Theme.Current
 
-        -- Root window background — tint to match theme
+        -- Root window background tints to theme
         Utility.Tween(root, med, { BackgroundColor3 = T2.Background })
         local rootStroke = root:FindFirstChildWhichIsA("UIStroke")
         if rootStroke then rootStroke.Color = Color3.new(1,1,1) end
 
-        -- Sidebar stays white glass always
-        sidebar.BackgroundColor3   = Color3.new(1,1,1)
-        sidebar.BackgroundTransparency = 0.94
-
-        -- Drag handle stays glass
-        dragHandle.BackgroundColor3 = Color3.new(1,1,1)
-        dragHandle.BackgroundTransparency = 0.88
-
-        -- Logo box — accent color
+        -- Logo box accent
         Utility.Tween(logoBox, fast, { BackgroundColor3 = T2.Accent })
 
-        -- Float button — accent color
+        -- Float button accent
         Utility.Tween(floatBtn, fast, { BackgroundColor3 = T2.Accent })
-
-        -- Search bar — stays white glass
-        if searchBar then
-            searchBar.BackgroundColor3 = Color3.new(1,1,1)
-            searchBar.BackgroundTransparency = 0.88
-            local sbStroke = searchBar:FindFirstChildWhichIsA("UIStroke")
-            if sbStroke then
-                sbStroke.Color = Color3.new(1,1,1)
-                sbStroke.Transparency = 0.72
-            end
-        end
 
         -- All tabs
         for _, tab in ipairs(tabs) do
+            -- Scroll bar
             tab.content.ScrollBarImageColor3 = T2.Accent
+
+            -- Indicator bar
             Utility.Tween(tab.indicator, fast, { BackgroundColor3 = T2.Accent })
 
+            -- Tab button — active=accent, inactive=white glass
             if tab == activeTab then
                 Utility.Tween(tab.btn, fast, {
                     BackgroundColor3 = T2.Accent,
@@ -1580,52 +1571,57 @@ function Components.CreateWindow(opts)
             else
                 Utility.Tween(tab.btn, fast, {
                     BackgroundColor3 = Color3.new(1,1,1),
-                    BackgroundTransparency = 0.90,
+                    BackgroundTransparency = 0.92,
                 })
             end
 
-        -- Process home tab accent refs if any
-        if tab._accentRefs then
-            for _, ref in ipairs(tab._accentRefs) do
-                if ref.inst and ref.inst.Parent then
-                    local newVal = T2[ref.key]
-                    if newVal then
-                        Utility.Tween(ref.inst, fast, { [ref.prop] = newVal })
+            -- Repopulate all dropdowns with fresh accent colors
+            for _, dRef in ipairs(tab.dropdownRefs) do
+                if dRef.listFrame and dRef.listFrame.Parent then
+                    dRef.listFrame.BackgroundColor3 = T2.Background
+                    dRef.listFrame.ScrollBarImageColor3 = T2.Accent
+                    pcall(dRef.repopulate)
+                end
+            end
+
+            -- Home tab accent refs (accentBar, avatarRing, badge, etc.)
+            if tab._accentRefs then
+                for _, ref in ipairs(tab._accentRefs) do
+                    if ref.inst and ref.inst.Parent then
+                        local newVal = T2[ref.key]
+                        if newVal then
+                            if ref.prop == "Color" then
+                                ref.inst[ref.prop] = newVal
+                            else
+                                Utility.Tween(ref.inst, fast, { [ref.prop] = newVal })
+                            end
+                        end
                     end
                 end
             end
-        end
 
-            -- Recolor accent-specific elements inside content
+            -- Walk content for named accent elements
             local function recolorDescendants(parent)
                 for _, child in ipairs(parent:GetChildren()) do
                     local n = child.Name
 
-                    -- Toggle track: white=off, accent=on
                     if n == "ToggleTrack" and child:IsA("Frame") then
                         local isOff = child.BackgroundTransparency > 0.5
                         if not isOff then
                             Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent, BackgroundTransparency = 0.1 })
                         end
 
-                    -- Slider fills
                     elseif n == "SliderFill" and child:IsA("Frame") then
                         Utility.Tween(child, fast, { BackgroundColor3 = T2.Accent })
 
-                    -- Slider thumb stroke
                     elseif n == "SliderThumb" and child:IsA("Frame") then
                         local st = child:FindFirstChildWhichIsA("UIStroke")
                         if st then st.Color = T2.Accent end
 
-                    -- Accent-colored text labels (slider values, etc.)
-                    -- Identified by NOT being white/muted text
                     elseif child:IsA("TextLabel") then
                         local c = child.TextColor3
-                        local isWhite = c.R > 0.9 and c.G > 0.9 and c.B > 0.9
-                        local isMuted = c.R < 0.4 and c.G < 0.4
-                        local isPrimary = c.R > 0.9 and c.G > 0.9 and c.B > 0.99
-                        -- Only recolor labels that look accent-colored (saturated, not white/grey)
                         local sat = math.max(c.R, c.G, c.B) - math.min(c.R, c.G, c.B)
+                        local isWhite = c.R > 0.9 and c.G > 0.9 and c.B > 0.9
                         if sat > 0.15 and not isWhite then
                             child.TextColor3 = T2.Accent
                         end
