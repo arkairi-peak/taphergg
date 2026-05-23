@@ -563,8 +563,8 @@ function Components.CreateWindow(opts)
         -- Sidebar button — icon only, square
         local tabBtn = Utility.Create("TextButton", {
             Name = tabName,
-            BackgroundColor3 = Color3.new(1,1,1),
-            BackgroundTransparency = 0.92,
+            BackgroundColor3 = T2.SurfaceLight,
+            BackgroundTransparency = 0.55,
             BorderSizePixel = 0,
             Size = UDim2.new(1, -10, 0, 38),
             Text = "",
@@ -1563,7 +1563,7 @@ function Components.CreateWindow(opts)
             -- Indicator bar
             Utility.Tween(tab.indicator, fast, { BackgroundColor3 = T2.Accent })
 
-            -- Tab button — active=accent, inactive=white glass
+            -- Tab button — active=accent solid, inactive=tinted surface
             if tab == activeTab then
                 Utility.Tween(tab.btn, fast, {
                     BackgroundColor3 = T2.Accent,
@@ -1571,8 +1571,8 @@ function Components.CreateWindow(opts)
                 })
             else
                 Utility.Tween(tab.btn, fast, {
-                    BackgroundColor3 = Color3.new(1,1,1),
-                    BackgroundTransparency = 0.92,
+                    BackgroundColor3 = T2.SurfaceLight,
+                    BackgroundTransparency = 0.55,
                 })
             end
 
@@ -1585,7 +1585,7 @@ function Components.CreateWindow(opts)
                 end
             end
 
-            -- Home tab accent refs (accentBar, avatarRing, badge, etc.)
+            -- Home tab accent refs (cards, bars, rings, etc.)
             if tab._accentRefs then
                 for _, ref in ipairs(tab._accentRefs) do
                     if ref.inst and ref.inst.Parent then
@@ -1593,6 +1593,13 @@ function Components.CreateWindow(opts)
                         if newVal then
                             if ref.prop == "Color" then
                                 ref.inst[ref.prop] = newVal
+                            elseif ref.prop == "BackgroundColor3" then
+                                -- For surface-colored cards, also ensure transparency is visible
+                                local trans = ref.transparency or (ref.key == "SurfaceLight" and 0.35 or 0.2)
+                                Utility.Tween(ref.inst, med, {
+                                    BackgroundColor3 = newVal,
+                                    BackgroundTransparency = trans,
+                                })
                             else
                                 Utility.Tween(ref.inst, fast, { [ref.prop] = newVal })
                             end
@@ -1650,15 +1657,16 @@ function Components.CreateWindow(opts)
 
         -- ── Player header card ───────────────────────────────────────────────
         local headerCard = Utility.Create("Frame", {
-            BackgroundColor3 = Color3.new(1,1,1),
-            BackgroundTransparency = 0.88,
+            BackgroundColor3 = T2.SurfaceLight,
+            BackgroundTransparency = 0.35,
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 0, 70),
             ZIndex = content.ZIndex + 1,
             Parent = content,
         })
         Utility.Round(headerCard, 14)
-        Utility.Stroke(headerCard, Color3.new(1,1,1), 1, 0.74)
+        Utility.Stroke(headerCard, Color3.new(1,1,1), 1, 0.80)
+        table.insert(homeAccentRefs, { inst = headerCard, prop = "BackgroundColor3", key = "SurfaceLight" })
 
         -- Top glass highlight strip
         local hGlass = Utility.Create("Frame", {
@@ -1791,14 +1799,15 @@ function Components.CreateWindow(opts)
 
         local execCard = Utility.Create("Frame", {
             BackgroundColor3 = T2.SurfaceLight,
-            BackgroundTransparency = 0.25,
+            BackgroundTransparency = 0.35,
             BorderSizePixel = 0,
             Size = UDim2.new(1, 0, 0, 36),
             ZIndex = content.ZIndex + 1,
             Parent = content,
         })
         Utility.Round(execCard, 10)
-        Utility.Stroke(execCard, Color3.new(1,1,1), 1, 0.88)
+        Utility.Stroke(execCard, Color3.new(1,1,1), 1, 0.80)
+        table.insert(homeAccentRefs, { inst = execCard, prop = "BackgroundColor3", key = "SurfaceLight" })
         -- Top shimmer
         local execGlass = Utility.Create("Frame", {
             BackgroundColor3 = Color3.new(1,1,1),
@@ -1881,13 +1890,15 @@ function Components.CreateWindow(opts)
         local function makeInfoCard(title, valueFunc, icon, clickCopy)
             local card = Utility.Create("Frame", {
                 BackgroundColor3 = T2.SurfaceLight,
-                BackgroundTransparency = 0.22,
+                BackgroundTransparency = 0.35,
                 BorderSizePixel = 0,
                 ZIndex = content.ZIndex + 2,
                 Parent = grid,
             })
             Utility.Round(card, 12)
-            Utility.Stroke(card, Color3.new(1,1,1), 1, 0.88)
+            Utility.Stroke(card, Color3.new(1,1,1), 1, 0.80)
+            -- Register for live theme recolor
+            table.insert(homeAccentRefs, { inst = card, prop = "BackgroundColor3", key = "SurfaceLight" })
 
             -- Top glass highlight
             local cGlass = Utility.Create("Frame", {
