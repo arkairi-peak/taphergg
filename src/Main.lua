@@ -3,7 +3,7 @@
     Core loader — entry point for the library.
     
     Usage:
-        local Tapher = loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src'))()
+        local Tapher = loadstring(game:HttpGet('YOUR_RAW_URL/TapherLib/Main.lua'))()
 
         local Window = Tapher:CreateWindow({
             Title    = "My Script",
@@ -82,7 +82,7 @@
 ]]
 
 -- ── Module paths (update BASE_URL before hosting) ───────────────────────────
-local BASE_URL = "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src"   -- e.g. https://raw.githubusercontent.com/you/repo/main/TapherLib
+local BASE_URL = "https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src"   -- e.g. https://raw.githubusercontent.com/arkairi-peak/taphergg/main/src
 
 local function req(path)
     local url = BASE_URL .. "/" .. path
@@ -156,6 +156,8 @@ end
 -- Change accent color at runtime — updates Theme AND recolors all open windows
 function TapherLib:SetAccent(accentOrPreset)
     Theme.SetAccent(accentOrPreset)
+    print("[TapherLib] SetAccent called:", tostring(accentOrPreset), "| Accent now:", tostring(Theme.Current.Accent))
+    print("[TapherLib] Windows to refresh:", #openWindows)
     -- Track for config save
     if type(accentOrPreset) == "string" then
         Config._accentPreset = accentOrPreset
@@ -164,7 +166,8 @@ function TapherLib:SetAccent(accentOrPreset)
         Config._accentColor  = accentOrPreset
         Config._accentPreset = nil
     end
-    for _, win in ipairs(openWindows) do
+    for i, win in ipairs(openWindows) do
+        print("[TapherLib] Refreshing window", i, "has RefreshAccent:", win.RefreshAccent ~= nil)
         if win.RefreshAccent then win:RefreshAccent() end
     end
 end
