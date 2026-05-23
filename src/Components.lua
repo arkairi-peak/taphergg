@@ -1542,6 +1542,7 @@ function Components.CreateWindow(opts)
     -- Live full theme recolor
     function Window:RefreshAccent()
         local T2 = Theme.Current
+        print("[TapherLib] RefreshAccent running, accent:", tostring(T2.Accent), "tabs:", #tabs)
 
         -- Root window background tints to theme
         Utility.Tween(root, med, { BackgroundColor3 = T2.Background })
