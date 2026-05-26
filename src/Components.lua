@@ -689,12 +689,12 @@ function Components.CreateWindow(opts)
         -- Hover
         tabBtn.MouseEnter:Connect(function()
             if activeTab ~= tab then
-                Utility.Tween(tabBtn, fast, { BackgroundTransparency = 0.2 })
+                Utility.Tween(tabBtn, fast, { BackgroundTransparency = 0.45 })
             end
         end)
         tabBtn.MouseLeave:Connect(function()
             if activeTab ~= tab then
-                Utility.Tween(tabBtn, fast, { BackgroundTransparency = 0.4 })
+                Utility.Tween(tabBtn, fast, { BackgroundTransparency = 0.78 })
             end
         end)
 
