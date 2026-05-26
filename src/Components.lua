@@ -342,11 +342,11 @@ function Components.CreateWindow(opts)
     -- Dragging
     Utility.MakeDraggable(titleBar, root)
 
-    -- Bottom drag handle bar
+    -- Bottom drag handle bar — glass style, rounded bottom corners
     local dragHandle = Utility.Create("Frame", {
         Name = "DragHandle",
-        BackgroundColor3 = T.SurfaceLight,
-        BackgroundTransparency = 0.3,
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BackgroundTransparency = 0.92,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0, 1),
         Position = UDim2.new(0, 0, 1, 0),
@@ -354,24 +354,23 @@ function Components.CreateWindow(opts)
         ZIndex = root.ZIndex + 2,
         Parent = root,
     })
-    Utility.Round(dragHandle, 0)
-    -- White drag line indicator
-    Utility.Create("Frame", {
+    -- Only round bottom corners by applying UICorner (rounds all 4, but bottom is inside window so top looks fine)
+    local dhCorner = Instance.new("UICorner")
+    dhCorner.CornerRadius = UDim.new(0, 18)
+    dhCorner.Parent = dragHandle
+    -- White drag line pill
+    local dragLine = Utility.Create("Frame", {
         Name = "DragLine",
         BackgroundColor3 = Color3.new(1, 1, 1),
-        BackgroundTransparency = 0.65,
+        BackgroundTransparency = 0.55,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 40, 0, 3),
+        Size = UDim2.new(0, 36, 0, 4),
         ZIndex = dragHandle.ZIndex + 1,
         Parent = dragHandle,
     })
-    -- Round the bottom corners of drag handle to match window
-    local dhCorner = Instance.new("UICorner")
-    dhCorner.CornerRadius = UDim.new(0, 14)
-    dhCorner.Parent = dragHandle
-    -- Make drag handle also draggable
+    Utility.Round(dragLine, 99)
     Utility.MakeDraggable(dragHandle, root)
 
     -- Floating toggle button (shown when UI is fully minimised via MinimiseMode = "Float")
@@ -1587,6 +1586,7 @@ function Components.CreateWindow(opts)
 
             -- Home tab accent refs (cards, bars, rings, etc.)
             if tab._accentRefs then
+                print("[TapherLib] Found _accentRefs, count:", #tab._accentRefs)
                 for _, ref in ipairs(tab._accentRefs) do
                     if ref.inst and ref.inst.Parent then
                         local newVal = T2[ref.key]
@@ -2116,8 +2116,15 @@ function Components.CreateWindow(opts)
             table.insert(homeAccentRefs, { inst = verLabel, prop = "TextColor3", key = "AccentHover" })
         end
 
-        -- Expose refs so RefreshAccent can update home cards
+        -- Expose refs on BOTH the Tab API and the internal tab object
         homeTab._accentRefs = homeAccentRefs
+        -- Find the internal tab object and store refs there too (for RefreshAccent)
+        for _, t in ipairs(tabs) do
+            if t.api == homeTab then
+                t._accentRefs = homeAccentRefs
+                break
+            end
+        end
 
         return homeTab
     end
