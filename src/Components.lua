@@ -521,12 +521,12 @@ function Components.CreateWindow(opts)
     function Window:SetActiveTab(tab)
         if activeTab then
             activeTab.content.Visible = false
+            -- Use Accent at high transparency so color stays correct regardless of theme
             Utility.Tween(activeTab.btn, fast, {
-                BackgroundColor3 = Theme.Current.TabInactive,
-                BackgroundTransparency = 0.4,
+                BackgroundColor3 = Theme.Current.Accent,
+                BackgroundTransparency = 0.78,
             })
             activeTab.indicator.Visible = false
-            -- Dim icon — works for both TextLabel and ImageLabel
             local icon = activeTab.btn:FindFirstChild("Icon")
             if icon then
                 if icon:IsA("TextLabel") then
@@ -543,7 +543,6 @@ function Components.CreateWindow(opts)
             BackgroundTransparency = 0.15,
         })
         tab.indicator.Visible = true
-        -- Brighten icon
         local icon = tab.btn:FindFirstChild("Icon")
         if icon then
             if icon:IsA("TextLabel") then
@@ -729,8 +728,8 @@ function Components.CreateWindow(opts)
             local T3 = Theme.Current
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Theme.Current.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Theme.Current.SurfaceLighter,
+                BackgroundTransparency = 0.15,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
@@ -797,10 +796,10 @@ function Components.CreateWindow(opts)
             Utility.AddRipple(btn, T3.Accent)
 
             btn.MouseEnter:Connect(function()
-                Utility.Tween(frame, fast, { BackgroundColor3 = Color3.new(1,1,1), BackgroundTransparency = 0.76 })
+                Utility.Tween(frame, fast, { BackgroundColor3 = Theme.Current.Accent, BackgroundTransparency = 0.55 })
             end)
             btn.MouseLeave:Connect(function()
-                Utility.Tween(frame, fast, { BackgroundColor3 = Color3.new(1,1,1), BackgroundTransparency = 0.88 })
+                Utility.Tween(frame, fast, { BackgroundColor3 = Theme.Current.SurfaceLighter, BackgroundTransparency = 0.15 })
             end)
             btn.MouseButton1Click:Connect(function()
                 if bOpts.Callback then bOpts.Callback() end
@@ -818,8 +817,8 @@ function Components.CreateWindow(opts)
             local state = tOpts.Default or false
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Theme.Current.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Theme.Current.SurfaceLighter,
+                BackgroundTransparency = 0.15,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
@@ -912,8 +911,8 @@ function Components.CreateWindow(opts)
             local val  = sOpts.Default or min
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Theme.Current.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Theme.Current.SurfaceLighter,
+                BackgroundTransparency = 0.15,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 54),
                 ZIndex = content.ZIndex + 1,
@@ -1213,8 +1212,8 @@ function Components.CreateWindow(opts)
             local T3 = Theme.Current
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Theme.Current.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Theme.Current.SurfaceLighter,
+                BackgroundTransparency = 0.15,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 54),
                 ZIndex = content.ZIndex + 1,
@@ -1294,8 +1293,8 @@ function Components.CreateWindow(opts)
             local open  = false
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Theme.Current.SurfaceLight,
-                BackgroundTransparency = 0.35,
+                BackgroundColor3 = Theme.Current.SurfaceLighter,
+                BackgroundTransparency = 0.15,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
@@ -1585,8 +1584,8 @@ function Components.CreateWindow(opts)
             for _, f in ipairs(tab.componentFrames) do
                 if f and f.Parent then
                     Utility.Tween(f, fast, {
-                        BackgroundColor3 = T2.SurfaceLight,
-                        BackgroundTransparency = 0.35,
+                        BackgroundColor3 = T2.SurfaceLighter,
+                        BackgroundTransparency = 0.15,
                     })
                 end
             end
