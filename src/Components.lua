@@ -562,8 +562,8 @@ function Components.CreateWindow(opts)
         -- Sidebar button — icon only, square
         local tabBtn = Utility.Create("TextButton", {
             Name = tabName,
-            BackgroundColor3 = T2.SurfaceLight,
-            BackgroundTransparency = 0.55,
+            BackgroundColor3 = T2.Accent,
+            BackgroundTransparency = 0.78,
             BorderSizePixel = 0,
             Size = UDim2.new(1, -10, 0, 38),
             Text = "",
@@ -679,7 +679,7 @@ function Components.CreateWindow(opts)
             content.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 16)
         end)
 
-        local tab = { btn = tabBtn, content = content, indicator = indicator, components = {}, dropdownRefs = {} }
+    local tab = { btn = tabBtn, content = content, indicator = indicator, components = {}, dropdownRefs = {}, componentFrames = {} }
         table.insert(tabs, tab)
 
         -- Activate on click
@@ -729,15 +729,15 @@ function Components.CreateWindow(opts)
             local T3 = Theme.Current
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.new(1,1,1),
-                BackgroundTransparency = 0.88,
+                BackgroundColor3 = Theme.Current.SurfaceLight,
+                BackgroundTransparency = 0.35,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
                 Parent = content,
             })
             Utility.Round(frame, 10)
-            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.74)
+            Utility.Stroke(frame, Color3.new(1,1,1), 1, 0.60)
 
             local btn = Utility.Create("TextButton", {
                 BackgroundTransparency = 1,
@@ -807,6 +807,7 @@ function Components.CreateWindow(opts)
             end)
 
             table.insert(tab.components, { frame = frame, label = bOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
             return frame
         end
 
@@ -817,8 +818,8 @@ function Components.CreateWindow(opts)
             local state = tOpts.Default or false
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.new(1,1,1),
-                BackgroundTransparency = 0.88,
+                BackgroundColor3 = Theme.Current.SurfaceLight,
+                BackgroundTransparency = 0.35,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
@@ -893,6 +894,7 @@ function Components.CreateWindow(opts)
             end
 
             table.insert(tab.components, { frame = frame, label = tOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
 
             local obj = {}
             function obj:Set(val) setState(val) end
@@ -910,8 +912,8 @@ function Components.CreateWindow(opts)
             local val  = sOpts.Default or min
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.new(1,1,1),
-                BackgroundTransparency = 0.88,
+                BackgroundColor3 = Theme.Current.SurfaceLight,
+                BackgroundTransparency = 0.35,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 54),
                 ZIndex = content.ZIndex + 1,
@@ -1031,6 +1033,7 @@ function Components.CreateWindow(opts)
             end
 
             table.insert(tab.components, { frame = frame, label = sOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
 
             local obj = {}
             function obj:Set(v) updateSlider(track.AbsolutePosition.X + track.AbsoluteSize.X * ((math.clamp(v,min,max)-min)/(max-min))) end
@@ -1193,6 +1196,7 @@ function Components.CreateWindow(opts)
             end
 
             table.insert(tab.components, { frame = frame, label = dOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
             -- Register for live accent refresh
             table.insert(tab.dropdownRefs, { listFrame = listFrame, repopulate = populateList })
 
@@ -1209,8 +1213,8 @@ function Components.CreateWindow(opts)
             local T3 = Theme.Current
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.new(1,1,1),
-                BackgroundTransparency = 0.88,
+                BackgroundColor3 = Theme.Current.SurfaceLight,
+                BackgroundTransparency = 0.35,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 54),
                 ZIndex = content.ZIndex + 1,
@@ -1274,6 +1278,7 @@ function Components.CreateWindow(opts)
             end
 
             table.insert(tab.components, { frame = frame, label = iOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
 
             local obj = {}
             function obj:Get() return textBox.Text end
@@ -1289,8 +1294,8 @@ function Components.CreateWindow(opts)
             local open  = false
 
             local frame = Utility.Create("Frame", {
-                BackgroundColor3 = Color3.new(1,1,1),
-                BackgroundTransparency = 0.88,
+                BackgroundColor3 = Theme.Current.SurfaceLight,
+                BackgroundTransparency = 0.35,
                 BorderSizePixel = 0,
                 Size = UDim2.new(1, 0, 0, 38),
                 ZIndex = content.ZIndex + 1,
@@ -1455,6 +1460,7 @@ function Components.CreateWindow(opts)
             end
 
             table.insert(tab.components, { frame = frame, label = cOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
 
             local obj = {}
             function obj:Get() return color end
@@ -1562,7 +1568,7 @@ function Components.CreateWindow(opts)
             -- Indicator bar
             Utility.Tween(tab.indicator, fast, { BackgroundColor3 = T2.Accent })
 
-            -- Tab button — active=accent solid, inactive=tinted surface
+            -- Tab button — active=accent, inactive=accent at high transparency so tint is visible
             if tab == activeTab then
                 Utility.Tween(tab.btn, fast, {
                     BackgroundColor3 = T2.Accent,
@@ -1570,9 +1576,19 @@ function Components.CreateWindow(opts)
                 })
             else
                 Utility.Tween(tab.btn, fast, {
-                    BackgroundColor3 = T2.SurfaceLight,
-                    BackgroundTransparency = 0.55,
+                    BackgroundColor3 = T2.Accent,
+                    BackgroundTransparency = 0.78,
                 })
+            end
+
+            -- Recolor all component frames (buttons, toggles, sliders, dropdowns, inputs)
+            for _, f in ipairs(tab.componentFrames) do
+                if f and f.Parent then
+                    Utility.Tween(f, fast, {
+                        BackgroundColor3 = T2.SurfaceLight,
+                        BackgroundTransparency = 0.35,
+                    })
+                end
             end
 
             -- Repopulate all dropdowns with fresh accent colors
