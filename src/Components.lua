@@ -1517,6 +1517,7 @@ function Components.CreateWindow(opts)
                 listFrame.Size = UDim2.new(0, absSize.X, 0, 0)
                 listFrame.BackgroundColor3 = Theme.Current.Background
                 listFrame.ScrollBarImageColor3 = Theme.Current.Accent
+                doneBtn.BackgroundColor3 = Theme.Current.Accent
                 listFrame.Visible = true
                 Utility.Tween(listFrame, fast, { Size = UDim2.new(0, absSize.X, 0, listMaxH) })
                 Utility.Tween(arrow, fast, { Rotation = 180 })
@@ -1564,7 +1565,10 @@ function Components.CreateWindow(opts)
 
             table.insert(tab.components, { frame = frame, label = dOpts.Name or "" })
             table.insert(tab.componentFrames, frame)
-            table.insert(tab.dropdownRefs, { listFrame = listFrame, repopulate = populateRows })
+            table.insert(tab.dropdownRefs, { listFrame = listFrame, repopulate = function()
+                populateRows()
+                Utility.Tween(doneBtn, fast, { BackgroundColor3 = Theme.Current.Accent })
+            end })
 
             -- ── Public API ────────────────────────────────────────────────
             local obj = {}
