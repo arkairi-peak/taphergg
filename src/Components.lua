@@ -1206,6 +1206,403 @@ function Components.CreateWindow(opts)
             return obj
         end
 
+        -- ── MultiDropdown ─────────────────────────────────────────────────────────
+--
+--  PASTE THIS BLOCK into Components.lua, directly after the closing
+--  `return obj` / `end` of Tab:AddDropdown (search for the line
+--  that reads:  local obj = {}  ...  obj:Refresh  ...  return obj  end
+--  and paste immediately after that closing `end`).
+--
+--  Usage:
+--      local dd = Tab:AddMultiDropdown({
+--          Name     = "Select Players",
+--          Options  = GetPlayerList(),   -- table of strings
+--          Default  = { "Alice" },       -- optional pre-selected values
+--          Max      = 3,                 -- optional max selections (nil = unlimited)
+--          Flag     = "SelectedPlayers",
+--          Callback = function(selected) -- selected is always a table
+--              _G.SelectedPlayers = selected
+--              print(table.concat(selected, ", "))
+--          end,
+--      })
+--
+--      dd:Get()            --> { "Alice", "Bob" }
+--      dd:Set({"Alice"})   --> replaces selection
+--      dd:Refresh(newList) --> swap options at runtime (selection is cleared)
+-- ──────────────────────────────────────────────────────────────────────────
+
+        function Tab:AddMultiDropdown(dOpts)
+            dOpts   = dOpts or {}
+            local T3      = Theme.Current
+            local options = dOpts.Options or {}
+            local max     = dOpts.Max  -- nil = unlimited
+
+            -- Selected is a set: { [optionString] = true }
+            local selectedSet = {}
+            if type(dOpts.Default) == "table" then
+                for _, v in ipairs(dOpts.Default) do
+                    selectedSet[v] = true
+                end
+            end
+
+            local open = false
+
+            -- ── Header frame ─────────────────────────────────────────────
+            local frame = Utility.Create("Frame", {
+                BackgroundColor3 = T3.SurfaceLight,
+                BackgroundTransparency = 0.35,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, 0, 0, 38),
+                ZIndex = content.ZIndex + 1,
+                ClipsDescendants = false,
+                Parent = content,
+            })
+            Utility.Round(frame, 8)
+            Utility.Stroke(frame, T3.Border, 1, 0.65)
+
+            -- Label on left
+            Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 14, 0, 0),
+                Size = UDim2.new(0.50, 0, 1, 0),
+                Text = dOpts.Name or "MultiDropdown",
+                TextColor3 = T3.TextPrimary,
+                TextSize = 12,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = frame.ZIndex + 2,
+                Parent = frame,
+            })
+
+            -- Summary label (e.g. "2 selected" or "None")
+            local function buildSummary()
+                local count = 0
+                for _ in pairs(selectedSet) do count = count + 1 end
+                if count == 0 then return "None" end
+                if count == 1 then
+                    for k in pairs(selectedSet) do return k end
+                end
+                return count .. " selected"
+            end
+
+            local selLabel = Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, -30, 0.5, 0),
+                Size = UDim2.new(0.38, 0, 0, 14),
+                Text = buildSummary(),
+                TextColor3 = T3.TextSecondary,
+                TextSize = 11,
+                Font = Enum.Font.Gotham,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                ZIndex = frame.ZIndex + 2,
+                Parent = frame,
+            })
+
+            -- Chevron arrow
+            local arrow = Utility.Create("TextLabel", {
+                BackgroundTransparency = 1,
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, -10, 0.5, 0),
+                Size = UDim2.new(0, 16, 0, 16),
+                Text = "v",
+                TextColor3 = T3.TextMuted,
+                TextSize = 10,
+                Font = Enum.Font.GothamBold,
+                ZIndex = frame.ZIndex + 2,
+                Parent = frame,
+            })
+
+            -- ── Dropdown list panel (parented to contentArea, not frame) ──
+            -- Each option row is 28px + 4px padding top/bottom + 4px gap between = ~32px/row
+            local ROW_H   = 30
+            local PAD     = 4
+            local MAX_VIS = 5          -- max visible rows before scroll kicks in
+            local listMaxH = math.min(#options, MAX_VIS) * (ROW_H + PAD) + PAD * 2 + 36 -- +36 for "Done" button
+
+            local listFrame = Utility.Create("ScrollingFrame", {
+                BackgroundColor3 = Color3.fromRGB(6, 5, 16),
+                BackgroundTransparency = 0.12,
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 0, 0, 0), -- positioned dynamically on open
+                Size = UDim2.new(0, 0, 0, 0),
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                ScrollBarThickness = 2,
+                ScrollBarImageColor3 = T3.Accent,
+                Visible = false,
+                ZIndex = 9000,
+                Parent = contentArea,
+            })
+            Utility.Round(listFrame, 10)
+            Utility.Stroke(listFrame, Color3.new(1, 1, 1), 1, 0.74)
+            local listLayout = Utility.ListLayout(listFrame, Enum.FillDirection.Vertical, PAD)
+            Utility.Padding(listFrame, PAD, PAD, PAD + 34, PAD) -- bottom pad = Done button height
+
+            -- ── "Done" button pinned at bottom of panel ───────────────────
+            local doneBtn = Utility.Create("TextButton", {
+                BackgroundColor3 = T3.Accent,
+                BackgroundTransparency = 0.15,
+                BorderSizePixel = 0,
+                AnchorPoint = Vector2.new(0, 1),
+                Position = UDim2.new(0, PAD, 1, -PAD),
+                Size = UDim2.new(1, -PAD * 2, 0, 28),
+                Text = "Done",
+                TextColor3 = Color3.new(1, 1, 1),
+                TextSize = 11,
+                Font = Enum.Font.GothamBold,
+                ZIndex = listFrame.ZIndex + 5,
+                Parent = listFrame,
+            })
+            Utility.Round(doneBtn, 7)
+
+            -- ── Option row builder ────────────────────────────────────────
+            local optionRows = {} -- { btn, checkMark, opt } for refresh
+
+            local function buildOptionRow(opt)
+                local isSelected = selectedSet[opt] == true
+
+                local row = Utility.Create("TextButton", {
+                    BackgroundColor3 = isSelected and T3.Accent or Color3.new(1, 1, 1),
+                    BackgroundTransparency = isSelected and 0.15 or 0.92,
+                    BorderSizePixel = 0,
+                    Size = UDim2.new(1, 0, 0, ROW_H),
+                    Text = "",
+                    ZIndex = listFrame.ZIndex + 1,
+                    Parent = listFrame,
+                })
+                Utility.Round(row, 7)
+
+                -- Checkmark circle on the left
+                local checkCircle = Utility.Create("Frame", {
+                    BackgroundColor3 = isSelected and T3.Accent or Color3.new(1, 1, 1),
+                    BackgroundTransparency = isSelected and 0.0 or 0.80,
+                    BorderSizePixel = 0,
+                    AnchorPoint = Vector2.new(0, 0.5),
+                    Position = UDim2.new(0, 8, 0.5, 0),
+                    Size = UDim2.new(0, 16, 0, 16),
+                    ZIndex = row.ZIndex + 1,
+                    Parent = row,
+                })
+                Utility.Round(checkCircle, 99)
+                if isSelected then
+                    Utility.Stroke(checkCircle, T3.Accent, 1.5, 0)
+                else
+                    Utility.Stroke(checkCircle, Color3.new(1, 1, 1), 1, 0.55)
+                end
+
+                local checkMark = Utility.Create("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 1, 0),
+                    Text = "✓",
+                    TextColor3 = Color3.new(1, 1, 1),
+                    TextSize = 9,
+                    Font = Enum.Font.GothamBold,
+                    Visible = isSelected,
+                    ZIndex = row.ZIndex + 2,
+                    Parent = checkCircle,
+                })
+
+                -- Option text
+                Utility.Create("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0, 32, 0, 0),
+                    Size = UDim2.new(1, -40, 1, 0),
+                    Text = opt,
+                    TextColor3 = isSelected and Color3.new(1, 1, 1) or T3.TextSecondary,
+                    TextSize = 11,
+                    Font = Enum.Font.Gotham,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    ZIndex = row.ZIndex + 1,
+                    Parent = row,
+                })
+
+                -- Click to toggle
+                row.MouseButton1Click:Connect(function()
+                    local nowSelected = selectedSet[opt] == true
+
+                    if nowSelected then
+                        -- Deselect
+                        selectedSet[opt] = nil
+                        Utility.Tween(row, fast, {
+                            BackgroundColor3 = Color3.new(1, 1, 1),
+                            BackgroundTransparency = 0.92,
+                        })
+                        checkCircle.BackgroundColor3 = Color3.new(1, 1, 1)
+                        checkCircle.BackgroundTransparency = 0.80
+                        local cs = checkCircle:FindFirstChildWhichIsA("UIStroke")
+                        if cs then cs.Color = Color3.new(1,1,1); cs.Transparency = 0.55 end
+                        checkMark.Visible = false
+                        local lbl = row:FindFirstChildWhichIsA("TextLabel")
+                        if lbl and lbl ~= checkMark then lbl.TextColor3 = T3.TextSecondary end
+                    else
+                        -- Check max
+                        if max then
+                            local count = 0
+                            for _ in pairs(selectedSet) do count = count + 1 end
+                            if count >= max then
+                                -- Flash the Done button to signal cap reached
+                                Utility.Tween(doneBtn, fast, { BackgroundColor3 = Theme.Current.Error or Color3.fromRGB(255,75,75) })
+                                task.delay(0.4, function()
+                                    Utility.Tween(doneBtn, fast, { BackgroundColor3 = Theme.Current.Accent })
+                                end)
+                                return
+                            end
+                        end
+
+                        -- Select
+                        selectedSet[opt] = true
+                        Utility.Tween(row, fast, {
+                            BackgroundColor3 = Theme.Current.Accent,
+                            BackgroundTransparency = 0.15,
+                        })
+                        checkCircle.BackgroundColor3 = Theme.Current.Accent
+                        checkCircle.BackgroundTransparency = 0.0
+                        local cs = checkCircle:FindFirstChildWhichIsA("UIStroke")
+                        if cs then cs.Color = Theme.Current.Accent; cs.Transparency = 0 end
+                        checkMark.Visible = true
+                        local lbl = row:FindFirstChildWhichIsA("TextLabel")
+                        if lbl and lbl ~= checkMark then lbl.TextColor3 = Color3.new(1,1,1) end
+                    end
+
+                    -- Update summary
+                    selLabel.Text = buildSummary()
+                    -- Fire callback immediately on every toggle
+                    if dOpts.Callback then
+                        local out = {}
+                        for k in pairs(selectedSet) do table.insert(out, k) end
+                        dOpts.Callback(out)
+                    end
+                end)
+
+                table.insert(optionRows, { row = row, checkCircle = checkCircle, checkMark = checkMark, opt = opt })
+                return row
+            end
+
+            -- ── Populate all rows ─────────────────────────────────────────
+            local function populateRows()
+                -- Clear existing option rows (keep doneBtn)
+                for _, r in ipairs(optionRows) do
+                    if r.row and r.row.Parent then r.row:Destroy() end
+                end
+                optionRows = {}
+
+                -- Move doneBtn to front so it renders on top of rows in canvas
+                -- (rows are inserted before it in the layout, but we use ZIndex)
+                for _, opt in ipairs(options) do
+                    buildOptionRow(opt)
+                end
+
+                -- Recompute heights
+                listMaxH = math.min(#options, MAX_VIS) * (ROW_H + PAD) + PAD * 2 + 36
+                listFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + PAD * 2)
+            end
+            populateRows()
+
+            -- ── Open / close logic ────────────────────────────────────────
+            local function closeList()
+                open = false
+                local w = listFrame.AbsoluteSize.X
+                Utility.Tween(listFrame, fast, { Size = UDim2.new(0, w, 0, 0) }, function()
+                    listFrame.Visible = false
+                end)
+                Utility.Tween(arrow, fast, { Rotation = 0 })
+            end
+
+            local function openList()
+                open = true
+                local absPos  = frame.AbsolutePosition
+                local absSize = frame.AbsoluteSize
+                local caPos   = contentArea.AbsolutePosition
+                listFrame.Position = UDim2.new(0, absPos.X - caPos.X, 0, absPos.Y - caPos.Y + absSize.Y + 4)
+                listFrame.Size = UDim2.new(0, absSize.X, 0, 0)
+                listFrame.BackgroundColor3 = Theme.Current.Background
+                listFrame.ScrollBarImageColor3 = Theme.Current.Accent
+                listFrame.Visible = true
+                Utility.Tween(listFrame, fast, { Size = UDim2.new(0, absSize.X, 0, listMaxH) })
+                Utility.Tween(arrow, fast, { Rotation = 180 })
+            end
+
+            local openBtn = Utility.Create("TextButton", {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                Text = "",
+                ZIndex = frame.ZIndex + 3,
+                Parent = frame,
+            })
+            openBtn.MouseButton1Click:Connect(function()
+                if open then closeList() else openList() end
+            end)
+
+            doneBtn.MouseButton1Click:Connect(function()
+                closeList()
+                -- Fire callback on Done press too (in case user wants final value)
+                if dOpts.Callback then
+                    local out = {}
+                    for k in pairs(selectedSet) do table.insert(out, k) end
+                    dOpts.Callback(out)
+                end
+            end)
+
+            -- ── Config integration ────────────────────────────────────────
+            if dOpts.Flag then
+                Config.Register(dOpts.Flag,
+                    function()
+                        local out = {}
+                        for k in pairs(selectedSet) do table.insert(out, k) end
+                        return out
+                    end,
+                    function(v)
+                        selectedSet = {}
+                        if type(v) == "table" then
+                            for _, s in ipairs(v) do selectedSet[s] = true end
+                        end
+                        selLabel.Text = buildSummary()
+                        populateRows()
+                    end
+                )
+            end
+
+            table.insert(tab.components, { frame = frame, label = dOpts.Name or "" })
+            table.insert(tab.componentFrames, frame)
+            table.insert(tab.dropdownRefs, { listFrame = listFrame, repopulate = populateRows })
+
+            -- ── Public API ────────────────────────────────────────────────
+            local obj = {}
+
+            -- Returns a plain array of selected strings
+            function obj:Get()
+                local out = {}
+                for k in pairs(selectedSet) do table.insert(out, k) end
+                return out
+            end
+
+            -- Replace selection with a new array
+            function obj:Set(arr)
+                selectedSet = {}
+                if type(arr) == "table" then
+                    for _, v in ipairs(arr) do selectedSet[v] = true end
+                end
+                selLabel.Text = buildSummary()
+                populateRows()
+                if dOpts.Callback then dOpts.Callback(self:Get()) end
+            end
+
+            -- Swap the options list entirely (clears selection)
+            function obj:Refresh(newOptions)
+                options = newOptions
+                selectedSet = {}
+                selLabel.Text = buildSummary()
+                populateRows()
+            end
+
+            -- Check if a specific option is selected
+            function obj:IsSelected(opt)
+                return selectedSet[opt] == true
+            end
+
+            return obj
+        end
+
         -- ── TextInput ─────────────────────────────────────────────────────────
         function Tab:AddTextInput(iOpts)
             iOpts = iOpts or {}
