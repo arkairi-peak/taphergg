@@ -17,7 +17,7 @@ local Dropdown
 -- ── Create window ─────────────────────────────────────────────────────────────
 local Window = Tapher:CreateWindow({
     Title        = "Tapher Hub",
-    Subtitle     = "v1.0 • by you",
+    Subtitle     = "v1.2.2 • by Arkairi ⭐ ",
     LogoImage    = "rbxassetid://97237638807192", -- top-left corner icon (rbxassetid or emoji)
     Keybind      = Enum.KeyCode.RightShift,
     Watermark    = true,
@@ -28,19 +28,19 @@ local Window = Tapher:CreateWindow({
 
 -- ── Home tab ──────────────────────────────────────────────────────────────────
 Window:AddHomePage({
-    TabIcon       = "⌂",
-    Badge         = "Owner",
+    TabIcon       = "rbxassetid://80609810613864",
+    Badge         = "Free",
     ScriptName    = "Tapher Hub",
-    ScriptVersion = "v1.0",
+    ScriptVersion = "v1.2.2",
     ScriptIcon    = "rbxassetid://97237638807192", -- your logo, or use emoji like "◈"
 })
 
--- ── Tab: Main ─────────────────────────────────────────────────────────────────
-local Combat = Window:AddTab({ Name = "Main", Icon = "🏠" })
+-- tab misc / players
+local Misc = Window:AddTab({ Name = "Misc", Icon = "rbxassetid://130498102822965" })
 
-Combat:AddSeparator("Player")
+Misc:AddSeparator("Player")
 
-Combat:AddToggle({
+Misc:AddToggle({
     Name    = "Infinite Jump",
     Default = false,
     Flag    = "InfJump",
@@ -63,7 +63,7 @@ Combat:AddToggle({
     end,
 })
 
-Combat:AddSlider({
+Misc:AddSlider({
     Name    = "Walk Speed",
     Min     = 16,
     Max     = 500,
@@ -78,7 +78,7 @@ Combat:AddSlider({
     end,
 })
 
-Combat:AddSlider({
+Misc:AddSlider({
     Name    = "Jump Power",
     Min     = 50,
     Max     = 500,
@@ -93,9 +93,30 @@ Combat:AddSlider({
     end,
 })
 
-Combat:AddSeparator("Misc")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-Combat:AddToggle({
+local OriginalMaxZoom = LocalPlayer.CameraMaxZoomDistance
+
+Misc:AddToggle({
+    Name = "Infinite Zoom",
+    Default = false,
+    Flag = "InfiniteZoom",
+
+    Callback = function(val)
+        if val then
+            LocalPlayer.CameraMaxZoomDistance = math.huge
+            print("Infinite Zoom Enabled")
+        else
+            LocalPlayer.CameraMaxZoomDistance = OriginalMaxZoom
+            print("Infinite Zoom Disabled")
+        end
+    end,
+})
+
+Misc:AddSeparator("Misc")
+
+Misc:AddToggle({
     Name    = "Noclip",
     Default = false,
     Flag    = "Noclip",
@@ -121,7 +142,7 @@ Combat:AddToggle({
     end,
 })
 
-Combat:AddToggle({
+Misc:AddToggle({ 
     Name    = "Fly",
     Default = false,
     Flag    = "Fly",
@@ -174,39 +195,39 @@ Combat:AddToggle({
     end,
 })
 
-_G.FlySpeed = 60
-Combat:AddSlider({
+_G.FlySpeed = 160
+Misc:AddSlider({
     Name    = "Flying Speed",
     Min     = 1,
-    Max     = 500,
+    Max     = 2000,
     Step    = 2,
     Default = 60,
     Flag    = "FlySpeed",
     Callback = function(val) _G.FlySpeed = val end,
 })
 
-Combat:AddSeparator("ESP")
+Misc:AddSeparator("ESP")
 
 _G.ESPDistance = 500
-Combat:AddSlider({
+Misc:AddSlider({
     Name    = "ESP Distance",
     Min     = 10,
-    Max     = 2000,
+    Max     = 3000,
     Step    = 10,
     Default = 500,
     Flag    = "ESPDistance",
     Callback = function(val) _G.ESPDistance = val end,
 })
 
-_G.ESPColor = Color3.fromRGB(99, 102, 241)
-Combat:AddColorPicker({
+_G.ESPColor = Color3.fromRGB(234, 0, 255)
+Misc:AddColorPicker({
     Name    = "ESP Color",
     Default = _G.ESPColor,
     Flag    = "ESPColor",
     Callback = function(color) _G.ESPColor = color end,
 })
 
-Combat:AddToggle({
+Misc:AddToggle({
     Name    = "ESP (Highlight + Line)",
     Default = false,
     Flag    = "ESP",
@@ -279,7 +300,7 @@ Combat:AddToggle({
     end,
 })
 
-Combat:AddSeparator("Spin")
+Misc:AddSeparator("Spin")
 
 local function GetPlayerList()
     local list = {}
@@ -289,21 +310,22 @@ local function GetPlayerList()
     return list
 end
 
-Dropdown = Combat:AddDropdown({
+Dropdown = Misc:AddDropdown({
     Name     = "Select Player",
     Options  = GetPlayerList(),
     Default  = nil,
-    Callback = function(val) _G.SelectedPlayer = val end,
+    Callback = function(val)
+	 _G.SelectedPlayer = val end,
 })
 
-Combat:AddButton({
+Misc:AddButton({
     Name = "Refresh Player List",
     Callback = function()
         Dropdown:Refresh(GetPlayerList())
     end,
 })
 
-Combat:AddToggle({
+Misc:AddToggle({
     Name    = "Orbit Player",
     Default = false,
     Flag    = "OrbitPlayer",
@@ -363,7 +385,7 @@ Combat:AddToggle({
 })
 
 -- ── Tab: Settings ─────────────────────────────────────────────────────────────
-local Settings = Window:AddTab({ Name = "Settings", Icon = "⚙" })
+local Settings = Window:AddTab({ Name = "Settings", Icon = "rbxassetid://109766113740047" })
 
 Settings:AddLabel("Accent Theme")
 
@@ -435,6 +457,68 @@ Settings:AddToggle({
     end,
 })
 
+
+local AntiTeleportLoaded = false
+Settings:AddButton({
+    Name = "Block Server Teleports",
+    Description = "Prevents teleports to other servers",
+    Callback = function()
+
+if AntiTeleportLoaded then
+    return
+						Tapher:NotifyInfo("Tapher Information", "Anti Teleport was already activated.", "Hologram")	
+end
+
+AntiTeleportLoaded = true
+
+        if not hookmetamethod then
+            warn("Your executor does not support hookmetamethod.")
+            return
+        end
+
+        local TeleportService = game:GetService("TeleportService")
+
+        local oldIndex
+        local oldNamecall
+
+        oldIndex = hookmetamethod(game, "__index", function(self, method)
+            if self == TeleportService then
+                method = tostring(method)
+
+                if method == "Teleport"
+                or method == "TeleportAsync"
+                or method == "TeleportPartyAsync"
+                or method == "TeleportToPlaceInstance"
+                or method == "TeleportToPrivateServer" then
+                    error("Tapher Teleport blocked.", 2)
+                end
+            end
+
+            return oldIndex(self, method)
+        end)
+
+        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            if self == TeleportService then
+                local method = tostring(getnamecallmethod())
+
+                if method == "Teleport"
+                or method == "TeleportAsync"
+                or method == "TeleportPartyAsync"
+                or method == "TeleportToPlaceInstance"
+                or method == "TeleportToPrivateServer" then
+                    warn("[Tapher Anti-Teleport] Blocked:", method)
+                    return nil
+                end
+            end
+
+            return oldNamecall(self, ...)
+        end)
+
+        print("[Tapher Anti-Teleport] Activated.")
+			Tapher:NotifyInfo("Tapher Information", "Anti Teleport is successfully activated, Only press this button once.", "Hologram")
+    end
+})
+
 Settings:AddSeparator("Notifications TEST")
 
 Settings:AddButton({
@@ -445,11 +529,11 @@ Settings:AddButton({
 })
 
 -- ── Tab: About ────────────────────────────────────────────────────────────────
-local About = Window:AddTab({ Name = "About", Icon = "◈" })
+local About = Window:AddTab({ Name = "About", Icon = "rbxassetid://110553639595926" })
 
 About:AddSeparator("Info")
 About:AddLabel("TapherLib v1.0.0")
-About:AddLabel("A modern glassmorphism Roblox UI library.")
+About:AddLabel("A modern Roblox UI library.")
 About:AddLabel("Made with hardwork and creativity by Arkairi.")
 About:AddSeparator("Links")
 
@@ -480,12 +564,12 @@ Tapher:Notify({
     Style       = "Hologram",
     Duration    = 10,
 })
-Tapher:Notify({
-    Title       = "Tapher Hub",
-    Description = "Thanks for using Tapher Library Hub! For more info visit arkairi-peak on GitHub.",
-    Type        = "success",
-    Style       = "Hologram",
-    Duration    = 15,
-})
+-- Tapher:Notify({
+--     Title       = "Tapher Hub",
+--    Description = "Thanks for using Tapher Library Hub! For more info visit arkairi-peak on GitHub.",
+--    Type        = "success",
+--    Style       = "Hologram",
+--    Duration    = 5,
+--})
 
 loadstring(game:HttpGet('https://raw.githubusercontent.com/arkairi-peak/taphergg/refs/heads/main/src/AsciiArtTapher.lua'))()
